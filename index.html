@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Project Chimera v2.0 - Ultimate AI Assistant</title>
+    <title>Project Chimera v2.1 - Asisten AI Canggih</title>
 
     <!-- External Libraries -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -18,15 +18,15 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Orbitron:wght@500;700&display=swap" rel="stylesheet">
-    <script src="https://unpkg.com/lucide@0.294.0/dist/umd/lucide.min.js"></script>
+    <script src="https://unpkg.com/lucide@0.378.0/dist/umd/lucide.min.js"></script>
 
     <style>
         :root {
-            --bg-dark: #0a0a0a; --bg-light: #f5f5f5;
-            --surface-dark: #1a1a1a; --surface-light: #ffffff;
-            --text-dark: #e5e5e5; --text-light: #0a0a0a;
-            --border-dark: #2e2e2e; --border-light: #e5e5e5;
-            --accent: #2563eb; --accent-hover: #1d4ed8;
+            --bg-dark: #020617; --bg-light: #f8fafc;
+            --surface-dark: #0f172a; --surface-light: #ffffff;
+            --text-dark: #e2e8f0; --text-light: #0f172a;
+            --border-dark: #1e293b; --border-light: #cbd5e1;
+            --accent: #3b82f6; --accent-hover: #2563eb;
             --font-body: 'Inter', sans-serif;
             --font-header: 'Orbitron', sans-serif;
         }
@@ -42,72 +42,103 @@
         }
         body {
             font-family: var(--font-body); background-color: var(--bg-primary);
-            color: var(--text-primary); transition: background-color 0.3s, color 0.3s;
+            color: var(--text-primary); transition: background-color 0.5s, color 0.5s;
+            overflow: hidden;
         }
         h1, h2, h3 { font-family: var(--font-header); }
-        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background-color: rgba(128, 128, 128, 0.3); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb { background-color: rgba(128, 128, 128, 0.3); border-radius: 10px; border: 2px solid transparent; background-clip: content-box;}
         .glass-effect {
-            background: rgba(26, 26, 26, 0.6); backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px); border: 1px solid var(--border-primary);
+            background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px); border: 1px solid var(--border-primary);
         }
         html.light .glass-effect { background: rgba(255, 255, 255, 0.6); }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .fade-in { animation: fadeIn 0.5s ease-out forwards; }
+
+        /* Animations */
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+        .fade-in { animation: fadeIn 0.6s ease-out forwards; }
+        @keyframes background-pan {
+          0% { background-position: 0% 50%; }
+          50% { background-position: 100% 50%; }
+          100% { background-position: 0% 50%; }
+        }
+        .animated-bg {
+            background: linear-gradient(90deg, var(--bg-dark), #0f172a, var(--bg-dark));
+            background-size: 200% 200%;
+            animation: background-pan 15s ease infinite;
+        }
+        html.light .animated-bg {
+             background: linear-gradient(90deg, var(--bg-light), #e2e8f0, var(--bg-light));
+             background-size: 200% 200%;
+        }
+
         .markdown-content table { width: 100%; border-collapse: collapse; margin: 1em 0; }
-        .markdown-content th, .markdown-content td { border: 1px solid var(--border-primary); padding: 0.5rem; }
+        .markdown-content th, .markdown-content td { border: 1px solid var(--border-primary); padding: 0.75rem; }
         .markdown-content th { background-color: var(--surface-primary); }
-        .blinking-cursor { display: inline-block; width: 3px; height: 1.2em; background-color: var(--accent); animation: blink 1s step-end infinite; vertical-align: bottom; }
-        @keyframes blink { 50% { opacity: 0; } }
+        
+        @keyframes typing-dots {
+            0%, 20% { content: '.'; }
+            40% { content: '..'; }
+            60%, 100% { content: '...'; }
+        }
+        .thinking-indicator::after {
+            content: '.';
+            animation: typing-dots 1.4s linear infinite;
+        }
     </style>
 </head>
-<body class="overflow-hidden">
+<body class="antialiased">
 
-    <div class="h-screen w-screen flex bg-cover bg-center" style="background-image: url('https://placehold.co/1920x1080/0a0a0a/1a1a1a?text=.');">
+    <div id="app-container" class="h-screen w-screen flex animated-bg">
         <!-- Sidebar -->
-        <aside id="sidebar" class="bg-black/20 h-full flex flex-col w-64 p-4 transition-all duration-300 -translate-x-full md:translate-x-0 md:relative absolute z-20">
-            <button id="new-chat-btn" class="flex items-center justify-center gap-2 w-full p-2 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700 transition-colors">
-                <i data-lucide="plus"></i> New Chat
+        <aside id="sidebar" class="bg-black/30 h-full flex flex-col w-72 p-4 transition-all duration-300 ease-in-out -translate-x-full md:translate-x-0 md:relative absolute z-30">
+            <div class="flex items-center justify-between mb-4">
+                 <h2 class="text-xl font-bold tracking-wider">CHIMERA</h2>
+                 <button id="sidebar-close" class="md:hidden p-1 rounded-full hover:bg-white/10"><i data-lucide="x"></i></button>
+            </div>
+            <button id="new-chat-btn" class="flex items-center justify-center gap-2 w-full p-2.5 rounded-lg bg-[var(--accent)] text-white font-semibold hover:bg-[var(--accent-hover)] transition-all duration-200 transform hover:scale-105 active:scale-100">
+                <i data-lucide="plus"></i> Obrolan Baru
             </button>
-            <div id="conversation-history" class="mt-4 flex-1 overflow-y-auto pr-2"></div>
-            <div class="pt-4 border-t border-[var(--border-primary)]">
-                <button id="settings-button" class="flex items-center gap-2 w-full p-2 rounded-lg hover:bg-white/10 transition-colors"><i data-lucide="settings"></i> Pengaturan</button>
-                <button id="theme-toggle" class="flex items-center gap-2 w-full p-2 rounded-lg hover:bg-white/10 transition-colors mt-2"><i data-lucide="sun"></i> <span id="theme-text">Mode Terang</span></button>
+            <div id="conversation-history" class="mt-4 flex-1 overflow-y-auto pr-2 space-y-2"></div>
+            <div class="pt-4 border-t border-[var(--border-primary)] space-y-1">
+                <button id="fullscreen-btn" class="flex items-center gap-3 w-full p-2 rounded-lg hover:bg-white/10 transition-colors"><i data-lucide="maximize"></i> Layar Penuh</button>
+                <button id="settings-button" class="flex items-center gap-3 w-full p-2 rounded-lg hover:bg-white/10 transition-colors"><i data-lucide="settings"></i> Pengaturan</button>
+                <button id="theme-toggle" class="flex items-center gap-3 w-full p-2 rounded-lg hover:bg-white/10 transition-colors"><i data-lucide="sun"></i> <span id="theme-text">Mode Terang</span></button>
             </div>
         </aside>
 
         <!-- Main Content -->
-        <div class="flex-1 flex flex-col h-full">
-             <button id="sidebar-toggle" class="md:hidden absolute top-4 left-4 z-30 p-2 bg-black/30 rounded-md"><i data-lucide="menu"></i></button>
-            <main class="flex-1 flex flex-col glass-effect m-2 md:m-4 rounded-xl overflow-hidden">
+        <div class="flex-1 flex flex-col h-full relative">
+             <button id="sidebar-toggle" class="md:hidden absolute top-4 left-4 z-20 p-2 bg-black/40 backdrop-blur-sm rounded-md hover:bg-white/20 transition-all"><i data-lucide="menu"></i></button>
+            <main class="flex-1 flex flex-col glass-effect m-2 md:m-4 rounded-2xl overflow-hidden shadow-2xl">
                 <!-- Chat Area -->
-                <div id="chat-container" class="flex-1 p-6 space-y-6 overflow-y-auto">
-                    <!-- Welcome Message -->
-                     <div class="flex justify-center text-center">
-                         <div class="max-w-2xl">
-                             <h1 class="text-4xl font-bold">Project Chimera 2.0</h1>
-                             <p class="mt-2 text-gray-400">Asisten AI canggih Anda. Kini dengan dukungan gambar, matematika, diagram, dan pencarian web. Mulai dengan mengetik pesan, mengunggah gambar, atau menggunakan suara.</p>
-                         </div>
-                     </div>
+                <div id="chat-container" class="flex-1 p-4 sm:p-6 space-y-6 overflow-y-auto">
+                    <!-- Welcome or Chat Messages will be rendered here -->
                 </div>
 
                 <!-- Input Footer -->
-                <footer class="p-4 border-t border-[var(--border-primary)] shrink-0 space-y-2">
+                <footer class="p-4 border-t border-[var(--border-primary)] shrink-0 space-y-3">
                     <div id="stop-generation-container" class="text-center hidden">
-                         <button id="stop-generation-btn" class="px-4 py-1 text-sm border border-yellow-500/50 text-yellow-300 rounded-lg hover:bg-yellow-500/20 transition-colors">Hentikan Generasi</button>
+                         <button id="stop-generation-btn" class="px-4 py-1.5 text-sm border border-yellow-500/50 text-yellow-300 rounded-lg hover:bg-yellow-500/20 transition-colors flex items-center gap-2 mx-auto">
+                            <i data-lucide="square" class="w-4 h-4"></i> Hentikan Generasi
+                         </button>
                     </div>
                     <div id="image-preview-container" class="flex gap-2 items-center"></div>
-                    <div class="flex items-end gap-2">
-                        <label for="image-upload-input" class="p-2.5 rounded-full hover:bg-white/10 cursor-pointer transition-colors"><i data-lucide="paperclip"></i></label>
+                    <div class="flex items-end gap-2 sm:gap-3">
+                        <label for="image-upload-input" class="p-3 rounded-full hover:bg-white/10 cursor-pointer transition-colors" title="Unggah gambar">
+                            <i data-lucide="paperclip"></i>
+                        </label>
                         <input type="file" id="image-upload-input" class="hidden" accept="image/*">
                         
                         <div class="flex-1 relative">
-                            <textarea id="user-input" placeholder="Ketik pesan atau unggah gambar..." class="w-full p-3 pl-4 pr-12 border border-[var(--border-primary)] rounded-2xl bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none" rows="1"></textarea>
-                            <button id="mic-btn" class="absolute right-4 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-white"><i data-lucide="mic"></i></button>
+                            <textarea id="user-input" placeholder="Ketik pesan atau unggah gambar..." class="w-full p-3 pl-4 pr-12 border border-[var(--border-primary)] rounded-2xl bg-transparent focus:outline-none focus:ring-2 focus:ring-[var(--accent)] transition-all resize-none" rows="1"></textarea>
+                            <button id="mic-btn" class="absolute right-4 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-white transition-colors" title="Input suara">
+                                <i data-lucide="mic"></i>
+                            </button>
                         </div>
 
-                        <button type="submit" id="send-button" form="chat-form" class="bg-blue-600 text-white p-3 rounded-full shadow-lg transition transform hover:scale-105 active:scale-95 disabled:bg-gray-500 disabled:scale-100">
+                        <button type="submit" id="send-button" class="bg-[var(--accent)] text-white p-3 rounded-full shadow-lg transition-all transform hover:scale-110 hover:bg-[var(--accent-hover)] active:scale-100 disabled:bg-gray-500 disabled:scale-100 disabled:cursor-not-allowed">
                             <i data-lucide="send"></i>
                         </button>
                     </div>
@@ -117,21 +148,27 @@
     </div>
     
     <!-- Modals -->
-    <div id="modal-backdrop" class="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center hidden z-50 p-4"></div>
+    <div id="modal-backdrop" class="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center hidden z-50 p-4 transition-opacity duration-300"></div>
+    
+    <!-- Toast Container -->
+    <div id="toast-container" class="fixed bottom-5 right-5 z-[100] space-y-2"></div>
+    
     <script>
     // ===================================================================================
-    // Project Chimera v2.0 - Ultimate AI Assistant
-    // Fitur: Image Vision, LaTeX Math, Mermaid Diagrams, Google Search, Voice Input, TTS
+    // Project Chimera v2.1 - Ultimate AI Assistant
+    // Perbaikan: UI/UX, Animasi, Fullscreen, Scrolling, Penanganan Error
     // ===================================================================================
     document.addEventListener('DOMContentLoaded', () => {
 
-        const dom = { /* All DOM elements will be dynamically selected here */ };
-        const state = { /* All application state will be managed here */ };
+        const dom = {};
+        const state = {};
 
         function setupDOM() {
             // Main structure
+            dom.appContainer = document.getElementById('app-container');
             dom.sidebar = document.getElementById('sidebar');
             dom.sidebarToggle = document.getElementById('sidebar-toggle');
+            dom.sidebarClose = document.getElementById('sidebar-close');
             dom.chatContainer = document.getElementById('chat-container');
             dom.userInput = document.getElementById('user-input');
             dom.sendButton = document.getElementById('send-button');
@@ -140,8 +177,7 @@
             // Sidebar
             dom.newChatBtn = document.getElementById('new-chat-btn');
             dom.conversationHistory = document.getElementById('conversation-history');
-            
-            // Header buttons (now in sidebar)
+            dom.fullscreenBtn = document.getElementById('fullscreen-btn');
             dom.settingsButton = document.getElementById('settings-button');
             dom.themeToggle = document.getElementById('theme-toggle');
             dom.themeText = document.getElementById('theme-text');
@@ -152,8 +188,9 @@
             dom.stopGenerationContainer = document.getElementById('stop-generation-container');
             dom.stopGenerationBtn = document.getElementById('stop-generation-btn');
             
-            // Modals
+            // Modals & Toasts
             dom.modalBackdrop = document.getElementById('modal-backdrop');
+            dom.toastContainer = document.getElementById('toast-container');
         }
 
         function initState() {
@@ -165,17 +202,10 @@
             state.abortController = null;
             state.uploadedImage = null; // Base64 string of the uploaded image
             
-            // AI Settings
-            state.settings = {
-                persona: 'default',
-                customSystemPrompt: ''
-            };
+            state.settings = { persona: 'default', customSystemPrompt: '' };
             const savedSettings = JSON.parse(localStorage.getItem('chimera_settings'));
-            if (savedSettings) {
-                state.settings = { ...state.settings, ...savedSettings };
-            }
+            if (savedSettings) state.settings = { ...state.settings, ...savedSettings };
 
-            // Speech Recognition
             window.SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
             state.recognition = window.SpeechRecognition ? new SpeechRecognition() : null;
             if (state.recognition) {
@@ -226,7 +256,8 @@
             state.activeConversationId = id;
             localStorage.setItem('chimera_activeConversationId', id);
             renderConversation(id);
-            loadConversations(); // To update active styles
+            loadConversations();
+            if(window.innerWidth < 768) dom.sidebar.classList.add('-translate-x-full');
         }
 
         function renderConversation(id) {
@@ -235,56 +266,46 @@
             if (!conversation) return;
             
             if (conversation.history.length === 0) {
-                 dom.chatContainer.innerHTML = `
-                     <div class="flex justify-center text-center">
-                         <div class="max-w-2xl">
-                             <h1 class="text-4xl font-bold">Project Chimera 2.0</h1>
-                             <p class="mt-2 text-gray-400">Asisten AI canggih Anda. Kini dengan dukungan gambar, matematika, diagram, dan pencarian web. Mulai dengan mengetik pesan, mengunggah gambar, atau menggunakan suara.</p>
-                         </div>
-                     </div>`;
-                return;
+                 renderWelcomeScreen();
+            } else {
+                conversation.history.forEach(msg => {
+                    if(msg.role === 'user') addMessage('user', msg.parts, false);
+                    else if (msg.role === 'model') addMessage('model', [{ text: msg.parts[0].text }], false);
+                });
             }
-            conversation.history.forEach(msg => {
-                if(msg.role === 'user') addMessage('user', msg.parts);
-                else if (msg.role === 'model') addMessage('model', [{ text: msg.parts[0].text }]);
-            });
         }
         
         function loadConversations() {
             dom.conversationHistory.innerHTML = '';
             const sortedConversations = Object.values(state.conversations).sort((a, b) => new Date(b.date) - new Date(a.date));
             sortedConversations.forEach(conv => {
+                const isActive = conv.id === state.activeConversationId;
                 const convElement = document.createElement('div');
-                convElement.className = `flex items-center justify-between p-2 rounded-lg cursor-pointer group ${conv.id === state.activeConversationId ? 'bg-blue-600/30' : 'hover:bg-white/10'}`;
+                convElement.className = `flex items-center justify-between p-2 rounded-lg cursor-pointer group transition-all duration-200 ${isActive ? 'bg-blue-600/30' : 'hover:bg-white/10'}`;
                 convElement.dataset.id = conv.id;
                 
-                const titleSpan = document.createElement('span');
-                titleSpan.textContent = conv.title;
-                titleSpan.className = 'truncate flex-1';
-                
-                const deleteBtn = document.createElement('button');
-                deleteBtn.innerHTML = `<i data-lucide="trash-2" class="w-4 h-4"></i>`;
-                deleteBtn.className = 'opacity-0 group-hover:opacity-100 text-gray-400 hover:text-white';
-                
-                convElement.appendChild(titleSpan);
-                convElement.appendChild(deleteBtn);
+                convElement.innerHTML = `
+                    <span class="truncate flex-1 pr-2">${conv.title}</span>
+                    <button class="delete-chat-btn opacity-0 group-hover:opacity-100 text-gray-400 hover:text-white transition-opacity p-1">
+                        <i data-lucide="trash-2" class="w-4 h-4"></i>
+                    </button>
+                `;
                 
                 convElement.addEventListener('click', (e) => {
-                    if (e.target.closest('button') === deleteBtn) return;
+                    if (e.target.closest('.delete-chat-btn')) {
+                        showCustomConfirm('Hapus percakapan?', `Anda yakin ingin menghapus "${conv.title}"? Aksi ini tidak dapat dibatalkan.`, () => {
+                            delete state.conversations[conv.id];
+                            if (state.activeConversationId === conv.id) {
+                                const nextConvId = Object.keys(state.conversations)[0];
+                                if (nextConvId) setActiveConversation(nextConvId);
+                                else createNewConversation();
+                            }
+                            saveAllData();
+                            loadConversations();
+                        });
+                        return;
+                    }
                     setActiveConversation(conv.id);
-                });
-                
-                deleteBtn.addEventListener('click', () => {
-                    showCustomConfirm('Hapus percakapan ini?', `Anda yakin ingin menghapus "${conv.title}"? Aksi ini tidak dapat dibatalkan.`, () => {
-                        delete state.conversations[conv.id];
-                        if (state.activeConversationId === conv.id) {
-                            const nextConv = Object.keys(state.conversations)[0];
-                            if (nextConv) setActiveConversation(nextConv);
-                            else createNewConversation();
-                        }
-                        saveAllData();
-                        loadConversations();
-                    });
                 });
 
                 dom.conversationHistory.appendChild(convElement);
@@ -299,13 +320,46 @@
         }
 
         // --- UI & DOM MANIPULATION ---
-        function addMessage(sender, parts) {
+        function renderWelcomeScreen() {
+             const prompts = [
+                { icon: 'code', text: 'Buatkan saya fungsi python untuk validasi email' },
+                { icon: 'edit-3', text: 'Tulis email untuk bos saya tentang laporan mingguan' },
+                { icon: 'brain-circuit', text: 'Jelaskan konsep Neural Network secara sederhana' },
+                { icon: 'image', text: 'Berikan saya ide gambar untuk postingan media sosial' },
+             ];
+             dom.chatContainer.innerHTML = `
+                 <div class="flex flex-col items-center justify-center h-full text-center fade-in">
+                     <div class="max-w-2xl">
+                         <h1 class="text-4xl md:text-5xl font-bold tracking-tight">Project Chimera 2.1</h1>
+                         <p class="mt-4 text-gray-400">Asisten AI canggih Anda. Terhubung ke web, mampu menganalisis gambar, membuat diagram, dan banyak lagi. Bagaimana saya bisa membantu Anda hari ini?</p>
+                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-8">
+                            ${prompts.map(p => `
+                                <button class="prompt-starter-btn text-left p-4 border border-[var(--border-primary)] rounded-lg hover:bg-white/5 transition-colors">
+                                    <div class="flex items-center gap-3">
+                                        <i data-lucide="${p.icon}" class="w-5 h-5 text-gray-400"></i>
+                                        <span class="font-medium">${p.text}</span>
+                                    </div>
+                                </button>
+                            `).join('')}
+                         </div>
+                     </div>
+                 </div>`;
+            lucide.createIcons();
+            document.querySelectorAll('.prompt-starter-btn').forEach(btn => {
+                btn.onclick = () => {
+                    dom.userInput.value = btn.querySelector('span').textContent;
+                    sendMessageToAI();
+                };
+            });
+        }
+
+        function addMessage(sender, parts, animate = true) {
             const isUser = sender === 'user';
             const messageWrapper = document.createElement('div');
             messageWrapper.className = `flex group ${isUser ? 'justify-end' : 'justify-start'}`;
 
             const bubble = document.createElement('div');
-            bubble.className = 'border p-4 rounded-xl max-w-3xl fade-in';
+            bubble.className = `border p-4 rounded-xl max-w-3xl ${animate ? 'fade-in' : ''}`;
             bubble.style.borderColor = 'var(--border-primary)';
             
             if (isUser) {
@@ -320,12 +374,11 @@
             if (isUser) {
                  let contentHTML = '';
                  parts.forEach(part => {
-                    if (part.text) contentHTML += `<p>${part.text}</p>`;
+                    if (part.text) contentHTML += `<p>${part.text.replace(/\n/g, '<br>')}</p>`;
                     if (part.inlineData) contentHTML += `<img src="data:${part.inlineData.mimeType};base64,${part.inlineData.data}" class="max-w-xs rounded-lg mt-2" alt="Uploaded content">`;
                  });
                  markdownContainer.innerHTML = contentHTML;
             } else {
-                // For model, we start with a placeholder for streaming
                 markdownContainer.innerHTML = parts[0].text;
             }
 
@@ -333,10 +386,10 @@
             
             if (!isUser) {
                 const controls = document.createElement('div');
-                controls.className = 'absolute -bottom-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity';
+                controls.className = 'absolute -bottom-4 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300';
                 controls.innerHTML = `
-                    <button class="copy-response-btn p-1.5 bg-[var(--surface-primary)] border border-[var(--border-primary)] rounded-md hover:bg-white/20"><i data-lucide="copy" class="w-4 h-4"></i></button>
-                    <button class="tts-btn p-1.5 bg-[var(--surface-primary)] border border-[var(--border-primary)] rounded-md hover:bg-white/20"><i data-lucide="volume-2" class="w-4 h-4"></i></button>
+                    <button class="copy-response-btn p-1.5 bg-[var(--surface-primary)] border border-[var(--border-primary)] rounded-md hover:bg-white/20" title="Salin"><i data-lucide="copy" class="w-4 h-4"></i></button>
+                    <button class="tts-btn p-1.5 bg-[var(--surface-primary)] border border-[var(--border-primary)] rounded-md hover:bg-white/20" title="Dengarkan"><i data-lucide="volume-2" class="w-4 h-4"></i></button>
                 `;
                 bubble.appendChild(controls);
             }
@@ -344,10 +397,8 @@
             messageWrapper.appendChild(bubble);
             dom.chatContainer.appendChild(messageWrapper);
             
-            if (!isUser) {
-                 renderMathInElement(bubble);
-                 highlightCodeInElement(bubble);
-                 renderMermaidDiagrams(bubble);
+            if (!isUser && parts[0].text !== '<div class="thinking-indicator"></div>') {
+                 postProcessMessage(bubble);
             }
             
             dom.chatContainer.scrollTop = dom.chatContainer.scrollHeight;
@@ -357,37 +408,46 @@
 
         async function streamMessage(bubble, fullResponse) {
             const contentDiv = bubble.querySelector('.markdown-content');
+            contentDiv.innerHTML = '';
             let displayedText = '';
+            let buffer = '';
             
-            // Basic word-by-word streaming
-            const words = fullResponse.split(' ');
+            const words = fullResponse.split(/(\s+)/);
             for (const word of words) {
-                if (state.abortController.signal.aborted) break;
-                displayedText += word + ' ';
-                contentDiv.innerHTML = marked.parse(displayedText + '<span class="blinking-cursor"></span>');
+                if (state.abortController && state.abortController.signal.aborted) break;
+                buffer += word;
+                if (buffer.length > 10) { // Update in chunks for performance
+                    displayedText += buffer;
+                    contentDiv.innerHTML = marked.parse(displayedText);
+                    buffer = '';
+                }
                 dom.chatContainer.scrollTop = dom.chatContainer.scrollHeight;
-                await new Promise(resolve => setTimeout(resolve, 30)); // Adjust for speed
+                await new Promise(resolve => setTimeout(resolve, 15));
             }
             
-            // Final render
-            contentDiv.innerHTML = marked.parse(fullResponse);
+            // Final render with any remaining buffer
+            displayedText += buffer;
+            contentDiv.innerHTML = marked.parse(displayedText);
+            postProcessMessage(bubble);
+        }
+        
+        function postProcessMessage(bubble) {
             renderMathInElement(bubble);
             highlightCodeInElement(bubble);
-            await renderMermaidDiagrams(bubble); // Mermaid rendering can be async
+            renderMermaidDiagrams(bubble);
         }
         
         function updateThemeUI() {
             document.documentElement.className = state.currentTheme;
 
-            // Remove the old icon (which could be an <i> or <svg>)
+            // Find and remove the old icon, which could be an <i> or <svg>
             const oldIcon = dom.themeToggle.querySelector('i') || dom.themeToggle.querySelector('svg');
             if (oldIcon) {
                 oldIcon.remove();
             }
-            
-            // Create and add the new icon placeholder
-            const newIcon = document.createElement('i');
 
+            // Create the new icon placeholder
+            const newIcon = document.createElement('i');
             if (state.currentTheme === 'dark') {
                 dom.themeText.textContent = 'Mode Terang';
                 newIcon.setAttribute('data-lucide', 'sun');
@@ -395,12 +455,14 @@
                 dom.themeText.textContent = 'Mode Gelap';
                 newIcon.setAttribute('data-lucide', 'moon');
             }
-
+            
             // Insert the new <i> tag before the <span> text
             dom.themeToggle.insertBefore(newIcon, dom.themeText);
-            
+
+            // Let Lucide process the new icon
             lucide.createIcons();
         }
+
 
         function autoResizeTextarea() {
             const textarea = dom.userInput;
@@ -411,30 +473,41 @@
         }
         
         function showToast(message, type = 'success') {
-            const toastContainer = document.getElementById('toast-container') || document.createElement('div');
-            if (!toastContainer.id) {
-                toastContainer.id = 'toast-container';
-                toastContainer.className = 'fixed bottom-5 right-5 z-50';
-                document.body.appendChild(toastContainer);
-            }
-            
             const toast = document.createElement('div');
-            const bgColor = type === 'error' ? 'bg-red-600' : 'bg-green-600';
-            toast.className = `fade-in ${bgColor} text-white px-4 py-2 rounded-lg shadow-lg`;
-            toast.textContent = message;
-            toastContainer.appendChild(toast);
-            setTimeout(() => { toast.remove(); }, 4000);
+            const colors = {
+                success: 'bg-green-600', error: 'bg-red-600', warning: 'bg-yellow-600'
+            };
+            toast.className = `flex items-center gap-3 ${colors[type]} text-white px-4 py-2 rounded-lg shadow-lg transform translate-y-4 opacity-0 transition-all duration-300`;
+            toast.innerHTML = `<i data-lucide="${type === 'success' ? 'check-circle' : 'alert-circle'}" class="w-5 h-5"></i><span>${message}</span>`;
+            
+            dom.toastContainer.appendChild(toast);
+            lucide.createIcons();
+            
+            setTimeout(() => {
+                toast.classList.remove('translate-y-4', 'opacity-0');
+            }, 10);
+            
+            setTimeout(() => {
+                toast.classList.add('opacity-0');
+                toast.addEventListener('transitionend', () => toast.remove());
+            }, 4000);
         }
 
         // --- MODAL SYSTEM ---
         function showModal(contentHTML) {
-            dom.modalBackdrop.innerHTML = `<div class="bg-[var(--surface-primary)] border border-[var(--border-primary)] w-full max-w-2xl p-6 rounded-xl shadow-2xl fade-in">${contentHTML}</div>`;
+            dom.modalBackdrop.innerHTML = `<div class="bg-[var(--surface-primary)] border border-[var(--border-primary)] w-full max-w-2xl rounded-2xl shadow-2xl fade-in flex flex-col max-h-[90vh]">
+                <div class="p-6 overflow-y-auto">${contentHTML}</div>
+            </div>`;
             dom.modalBackdrop.classList.remove('hidden');
+            dom.modalBackdrop.classList.remove('opacity-0');
         }
 
         function hideModal() {
-            dom.modalBackdrop.classList.add('hidden');
-            dom.modalBackdrop.innerHTML = '';
+            dom.modalBackdrop.classList.add('opacity-0');
+            dom.modalBackdrop.addEventListener('transitionend', () => {
+                dom.modalBackdrop.classList.add('hidden');
+                dom.modalBackdrop.innerHTML = '';
+            }, { once: true });
         }
         
         function showSettingsModal() {
@@ -444,7 +517,7 @@
                     <div>
                         <label for="api-key-settings-input" class="block text-sm font-medium text-gray-400 mb-1">Google AI API Key</label>
                         <input type="password" id="api-key-settings-input" placeholder="Masukkan API Key Anda" class="w-full p-2 border border-[var(--border-primary)] rounded-lg bg-[var(--bg-primary)] focus:outline-none focus:ring-1 focus:ring-blue-500" value="${state.apiKey}">
-                        <p class="text-xs text-gray-500 mt-1">Dapatkan kunci gratis dari <a href="https://aistudio.google.com/app/apikey" target="_blank" class="text-blue-400 underline">Google AI Studio</a>.</p>
+                        <p class="text-xs text-gray-500 mt-1">Dapatkan kunci gratis dari <a href="https://aistudio.google.com/app/apikey" target="_blank" class="text-blue-400 underline hover:text-blue-300">Google AI Studio</a>.</p>
                     </div>
                     <div>
                         <label for="persona-select" class="block text-sm font-medium text-gray-400 mb-1">Persona AI</label>
@@ -468,9 +541,9 @@
                         </div>
                     </div>
                 </div>
-                <div class="flex justify-end mt-8 space-x-3">
+                <div class="flex justify-end mt-8 space-x-3 pt-6 border-t border-[var(--border-primary)]">
                      <button id="close-settings-button" class="px-4 py-2 rounded-lg hover:bg-white/10 transition-colors">Tutup</button>
-                     <button id="save-settings-button" class="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 transition-colors font-semibold">Simpan Pengaturan</button>
+                     <button id="save-settings-button" class="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 transition-colors font-semibold">Simpan</button>
                 </div>
             `;
             showModal(content);
@@ -487,10 +560,7 @@
                 </div>
             `;
             showModal(content);
-            document.getElementById('confirm-ok').onclick = () => {
-                onConfirm();
-                hideModal();
-            };
+            document.getElementById('confirm-ok').onclick = () => { onConfirm(); hideModal(); };
             document.getElementById('confirm-cancel').onclick = hideModal;
         }
 
@@ -504,10 +574,7 @@
                 copyBtn.innerHTML = `<i data-lucide="copy" class="w-4 h-4"></i>`;
                 copyBtn.title = 'Salin kode';
                 copyBtn.className = 'copy-code-btn absolute top-2 right-2 p-1.5 bg-black/30 rounded-md hover:bg-black/50 transition-colors';
-                copyBtn.onclick = () => {
-                    navigator.clipboard.writeText(block.innerText);
-                    showToast('Kode disalin!');
-                };
+                copyBtn.onclick = () => { navigator.clipboard.writeText(block.innerText); showToast('Kode disalin!'); };
                 pre.style.position = 'relative';
                 pre.appendChild(copyBtn);
             });
@@ -518,13 +585,11 @@
             const mathElements = element.querySelectorAll('p, li, td, th');
             mathElements.forEach(el => {
                 let text = el.innerHTML;
-                // Block math $$...$$
                 text = text.replace(/\$\$([\s\S]*?)\$\$/g, (match, formula) => {
                     try { return katex.renderToString(formula.trim(), { displayMode: true, throwOnError: false }); }
                     catch (e) { return `<span class="text-red-400">LaTeX Error</span>`; }
                 });
-                // Inline math $...$
-                text = text.replace(/\$([^\s][\s\S]*?[^\s])\$/g, (match, formula) => {
+                text = text.replace(/(?<!\\)\$([^\s][\s\S]*?[^\s])\$/g, (match, formula) => {
                      try { return katex.renderToString(formula.trim(), { throwOnError: false }); }
                      catch (e) { return `<span class="text-red-400">LaTeX Error</span>`; }
                 });
@@ -550,46 +615,63 @@
             return new Promise((resolve, reject) => {
                 const reader = new FileReader();
                 reader.readAsDataURL(file);
-                reader.onload = () => resolve(reader.result.split(',')[1]); // Get only base64 part
+                reader.onload = () => resolve(reader.result.split(',')[1]);
                 reader.onerror = error => reject(error);
             });
+        }
+        
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                dom.appContainer.requestFullscreen().catch(err => {
+                    alert(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`);
+                });
+                dom.fullscreenBtn.innerHTML = `<i data-lucide="minimize"></i> Keluar Layar Penuh`;
+            } else {
+                document.exitFullscreen();
+                dom.fullscreenBtn.innerHTML = `<i data-lucide="maximize"></i> Layar Penuh`;
+            }
+            lucide.createIcons();
         }
         
         // --- CORE API LOGIC ---
         async function sendMessageToAI() {
             const userMessage = dom.userInput.value.trim();
             if (!userMessage && !state.uploadedImage) return;
+            if (!state.apiKey) {
+                showSettingsModal();
+                showToast("Harap masukkan API Key Anda terlebih dahulu.", "error");
+                return;
+            }
 
             state.isGenerating = true;
             state.abortController = new AbortController();
             updateUIForGeneration(true);
+            
+            if (state.conversations[state.activeConversationId]?.history.length === 0) {
+                 dom.chatContainer.innerHTML = ''; // Clear welcome message
+            }
 
             let userParts = [];
             if (userMessage) userParts.push({ text: userMessage });
-            if (state.uploadedImage) {
-                userParts.push({ inlineData: { mimeType: 'image/png', data: state.uploadedImage } });
-            }
+            if (state.uploadedImage) userParts.push({ inlineData: { mimeType: 'image/png', data: state.uploadedImage } });
             
             addMessage('user', userParts);
             
             const currentConv = state.conversations[state.activeConversationId];
             currentConv.history.push({ role: 'user', parts: userParts });
             
-            // Auto-generate title for the first message
             if (currentConv.history.length === 1 && userMessage) {
-                currentConv.title = userMessage.split(' ').slice(0, 4).join(' ');
+                currentConv.title = userMessage.split(' ').slice(0, 5).join(' ');
                 loadConversations();
             }
-            
             saveAllData();
             
-            // Reset input
             dom.userInput.value = '';
             state.uploadedImage = null;
             dom.imagePreviewContainer.innerHTML = '';
             autoResizeTextarea();
 
-            const modelBubble = addMessage('model', [{ text: '<span class="blinking-cursor"></span>' }]);
+            const modelBubble = addMessage('model', [{ text: '<div class="thinking-indicator"></div>' }]);
 
             try {
                 const systemPromptText = state.settings.persona === 'custom' ? state.settings.customSystemPrompt : personas[state.settings.persona];
@@ -610,14 +692,14 @@
 
                 if (!response.ok) {
                     const errorData = await response.json();
-                    throw new Error(errorData.error.message || `API Error: ${response.status}`);
+                    const readableError = errorData.error?.message || `API Error: ${response.status}. Periksa konsol untuk detail.`;
+                    throw new Error(readableError);
                 }
                 
                 const result = await response.json();
-                const fullResponse = result.candidates?.[0]?.content?.parts?.[0]?.text || "Maaf, terjadi kesalahan.";
+                const fullResponse = result.candidates?.[0]?.content?.parts?.[0]?.text || "Maaf, terjadi kesalahan atau tidak ada respons yang diterima.";
 
                 await streamMessage(modelBubble, fullResponse);
-                
                 currentConv.history.push({ role: 'model', parts: [{ text: fullResponse }] });
 
             } catch (error) {
@@ -625,7 +707,7 @@
                 if (error.name === 'AbortError') {
                     errorMessage = "*(Generasi dihentikan oleh pengguna)*";
                 } else {
-                    errorMessage = `**Terjadi Kesalahan:**\n\`\`\`\n${error.message}\n\`\`\`\n\nPastikan API Key Anda benar dan coba lagi.`;
+                    errorMessage = `**Terjadi Kesalahan:**\n\`\`\`\n${error.message}\n\`\`\`\n\nPastikan API Key Anda benar dan koneksi internet stabil.`;
                     console.error("API Error:", error);
                 }
                 modelBubble.querySelector('.markdown-content').innerHTML = marked.parse(errorMessage);
@@ -644,7 +726,6 @@
         // --- EVENT LISTENERS ---
         function setupEventListeners() {
             dom.newChatBtn.addEventListener('click', createNewConversation);
-            
             dom.sendButton.addEventListener('click', sendMessageToAI);
             dom.userInput.addEventListener('keydown', (e) => {
                 if (e.key === 'Enter' && !e.shiftKey) {
@@ -653,27 +734,24 @@
                 }
             });
             dom.userInput.addEventListener('input', autoResizeTextarea);
-
-            dom.sidebarToggle.addEventListener('click', () => {
-                dom.sidebar.classList.toggle('-translate-x-full');
-            });
-            
+            dom.sidebarToggle.addEventListener('click', () => dom.sidebar.classList.remove('-translate-x-full'));
+            dom.sidebarClose.addEventListener('click', () => dom.sidebar.classList.add('-translate-x-full'));
             dom.themeToggle.addEventListener('click', () => {
                 state.currentTheme = state.currentTheme === 'dark' ? 'light' : 'dark';
                 localStorage.setItem('chimera_theme', state.currentTheme);
                 mermaid.initialize({ startOnLoad: false, theme: state.currentTheme });
                 updateThemeUI();
             });
-            
             dom.settingsButton.addEventListener('click', showSettingsModal);
+            dom.fullscreenBtn.addEventListener('click', toggleFullscreen);
 
             dom.imageUploadInput.addEventListener('change', async (e) => {
                 const file = e.target.files[0];
                 if (file) {
                     state.uploadedImage = await fileToBase64(file);
                     dom.imagePreviewContainer.innerHTML = `
-                        <div class="relative">
-                            <img src="${URL.createObjectURL(file)}" class="h-14 rounded-lg">
+                        <div class="relative fade-in">
+                            <img src="${URL.createObjectURL(file)}" class="h-14 rounded-lg border border-[var(--border-primary)]">
                             <button id="remove-image-btn" class="absolute -top-1 -right-1 bg-red-600 rounded-full text-white p-0.5"><i data-lucide="x" class="w-3 h-3"></i></button>
                         </div>`;
                     lucide.createIcons();
@@ -689,35 +767,26 @@
                     try {
                         state.recognition.start();
                         dom.micBtn.classList.add('text-red-500', 'animate-pulse');
-                    } catch (e) {
-                        showToast('Pengenalan suara sudah aktif.', 'error');
-                    }
+                    } catch (e) { showToast('Pengenalan suara sudah aktif.', 'error'); }
                 });
-                state.recognition.onresult = (event) => {
-                    const transcript = event.results[0][0].transcript;
-                    dom.userInput.value += transcript;
-                    autoResizeTextarea();
-                };
-                state.recognition.onend = () => {
-                    dom.micBtn.classList.remove('text-red-500', 'animate-pulse');
-                };
-                state.recognition.onerror = (event) => {
-                    showToast(`Error pengenalan suara: ${event.error}`, 'error');
-                };
+                state.recognition.onresult = (event) => { dom.userInput.value += event.results[0][0].transcript; autoResizeTextarea(); };
+                state.recognition.onend = () => dom.micBtn.classList.remove('text-red-500', 'animate-pulse');
+                state.recognition.onerror = (event) => showToast(`Error pengenalan suara: ${event.error}`, 'error');
             } else {
                 dom.micBtn.disabled = true;
                 dom.micBtn.title = "Pengenalan suara tidak didukung di browser ini.";
             }
 
             // Delegated event listeners for dynamic content
-            document.body.addEventListener('click', async (e) => {
+            document.body.addEventListener('click', (e) => {
                 // Settings Modal
+                const modalContent = e.target.closest('.w-full.max-w-2xl');
+                if (!modalContent && !e.target.closest('#settings-button')) hideModal();
                 if (e.target.id === 'close-settings-button') hideModal();
                 if (e.target.id === 'save-settings-button') {
                     state.apiKey = document.getElementById('api-key-settings-input').value.trim();
                     state.settings.persona = document.getElementById('persona-select').value;
                     state.settings.customSystemPrompt = document.getElementById('system-prompt-input').value;
-                    
                     localStorage.setItem('chimera_apiKey', state.apiKey);
                     saveAllData();
                     hideModal();
@@ -730,7 +799,7 @@
                 if (e.target.id === 'reset-all-settings-btn') {
                     showCustomConfirm('Reset Semua Pengaturan?', 'Aksi ini akan menghapus semua riwayat percakapan, API Key, dan pengaturan lainnya. Lanjutkan?', () => {
                         localStorage.clear();
-                        initState(); // Reset state
+                        initState();
                         hideModal();
                         showSettingsModal();
                         loadConversations();
@@ -750,14 +819,12 @@
                     showToast('Percakapan diekspor!');
                 }
 
-                // Image preview
                 if (e.target.closest('#remove-image-btn')) {
                     state.uploadedImage = null;
-                    dom.imageUploadInput.value = ''; // Reset file input
+                    dom.imageUploadInput.value = '';
                     dom.imagePreviewContainer.innerHTML = '';
                 }
 
-                // Message controls
                 const copyBtn = e.target.closest('.copy-response-btn');
                 if (copyBtn) {
                     const textToCopy = copyBtn.closest('.fade-in').querySelector('.markdown-content').innerText;
@@ -766,6 +833,7 @@
                 }
                 const ttsBtn = e.target.closest('.tts-btn');
                 if (ttsBtn) {
+                    speechSynthesis.cancel();
                     const textToSpeak = ttsBtn.closest('.fade-in').querySelector('.markdown-content').innerText;
                     const utterance = new SpeechSynthesisUtterance(textToSpeak);
                     utterance.lang = 'id-ID';
@@ -780,4 +848,5 @@
     </script>
 </body>
 </html>
+
 
