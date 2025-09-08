@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project Chimera - Ultimate AI Chatbot (Online)</title>
+    
+    <!-- External Libraries -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/4.3.0/marked.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    
+    <!-- Fonts and Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Orbitron:wght@500;700&display=swap" rel="stylesheet">
+    
+    <style>
+        /* --- Base & Theming --- */
+        :root {
+            --bg-dark: #0d1117; --bg-light: #f0f2f5;
+            --surface-dark: #161b22; --surface-light: #ffffff;
+            --text-dark: #e6edf3; --text-light: #0d1117;
+            --accent-glow: 0 0 15px rgba(0, 191, 255, 0.5), 0 0 5px rgba(0, 191, 255, 0.7);
+            --font-body: 'Inter', sans-serif;
+            --font-header: 'Orbitron', sans-serif;
+        }
+        html.dark {
+            --bg-primary: var(--bg-dark);
+            --surface-primary: var(--surface-dark);
+            --text-primary: var(--text-dark);
+            --border-color: rgba(255, 255, 255, 0.1);
+        }
+        html.light {
+            --bg-primary: var(--bg-light);
+            --surface-primary: var(--surface-light);
+            --text-primary: var(--text-light);
+            --border-color: rgba(0, 0, 0, 0.1);
+        }
+        body {
+            font-family: var(--font-body);
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            transition: background-color 0.3s, color 0.3s;
+        }
+        h1, h2, h3 { font-family: var(--font-header); }
+
+        /* --- Custom Scrollbar --- */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background-color: rgba(128, 128, 128, 0.3); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background-color: rgba(128, 128, 128, 0.5); }
+
+        /* --- Glassmorphism Effect --- */
+        .glass-effect {
+            background: rgba(22, 27, 34, 0.6);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--border-color);
+        }
+        html.light .glass-effect {
+             background: rgba(255, 255, 255, 0.6);
+        }
+
+        /* --- Animations --- */
+        @keyframes fadeIn { from { opacity: 0; transform: scale(0.98) translateY(10px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+        @keyframes slideInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes pulse-glow { 0%, 100% { box-shadow: var(--accent-glow); } 50% { box-shadow: 0 0 25px rgba(0, 191, 255, 0.8), 0 0 10px rgba(0, 191, 255, 1); } }
+        .fade-in { animation: fadeIn 0.5s ease-out forwards; }
+        .slide-in-up { animation: slideInUp 0.5s ease-out forwards; }
+        
+        /* --- Markdown & Code Block Styling --- */
+        .markdown-content pre { position: relative; }
+        .markdown-content code { font-family: 'Courier New', Courier, monospace; }
+        .copy-code-btn {
+            position: absolute;
+            top: 0.5rem; right: 0.5rem;
+            background-color: rgba(255, 255, 255, 0.1);
+            color: white;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.375rem;
+            font-size: 0.75rem;
+            opacity: 0;
+            transition: opacity 0.2s, background-color 0.2s;
+            cursor: pointer;
+        }
+        .markdown-content pre:hover .copy-code-btn { opacity: 1; }
+        .copy-code-btn:hover { background-color: rgba(255, 255, 255, 0.2); }
+        .copy-code-btn:active { background-color: #00BF63; }
+        
+        /* --- Blinking Cursor for Streaming Text --- */
+        .blinking-cursor {
+            display: inline-block;
+            width: 8px;
+            height: 1.2em;
+            background-color: deepskyblue;
+            animation: blink 1s step-end infinite;
+            vertical-align: bottom;
+        }
+        @keyframes blink { 50% { opacity: 0; } }
+    </style>
+</head>
+<body class="overflow-hidden">
+
+    <!-- Main Application Wrapper -->
+    <div id="app-container" class="h-screen w-screen flex flex-col items-center justify-center p-4 bg-cover bg-center" style="background-image: url('https://placehold.co/1920x1080/0d1117/e6edf3?text=.');">
+        <div class="glass-effect w-full h-full max-w-6xl rounded-2xl shadow-2xl flex flex-col fade-in">
+            
+            <!-- Header -->
+            <header class="flex items-center justify-between p-4 border-b border-[var(--border-color)] shrink-0">
+                <div class="flex items-center gap-3">
+                    <svg class="w-10 h-10 text-cyan-400" viewBox="0 0 24 24" fill="currentColor"><path d="M12.38 2.51a1 1 0 0 0-1.13.34L6.2 9.1a1 1 0 0 0-.2 1.05l1.09 3.27a1 1 0 0 0 1.34.62l3.27-1.09a1 1 0 0 0 .62-1.34l-1.09-3.27a1 1 0 0 0-.48-.65L12.38 2.5zm-.89 12.3a1 1 0 0 0-1.05-.2l-3.27 1.09a1 1 0 0 0-.62 1.34l3.27 1.09a1 1 0 0 0 1.05.2l3.27-1.09a1 1 0 0 0 .62-1.34L12.1 15a1 1 0 0 0-.6-.19zm-3.27-4.18a1 1 0 0 0-1.34-.62L2.75 11.1a1 1 0 0 0-.62 1.34l1.09 3.27a1 1 0 0 0 1.34.62l3.27-1.09a1 1 0 0 0 .62-1.34l-1.09-3.27a1 1 0 0 0-.32-.41zm12.72-.62l-3.27-1.09a1 1 0 0 0-1.34.62l-1.09 3.27a1 1 0 0 0 .33 1.08l2.21 2.21a1 1 0 0 0 1.08.33l3.27-1.09a1 1 0 0 0 .62-1.34l-1.09-3.27a1 1 0 0 0-.72-.72z"/></svg>
+                    <div>
+                        <h1 class="text-xl font-bold text-[var(--text-primary)]">Project Chimera</h1>
+                        <p id="ai-status" class="text-xs text-green-400">Ready</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button id="theme-toggle" class="p-2 rounded-lg hover:bg-[var(--border-color)] transition-colors" title="Toggle Theme"></button>
+                    <button id="export-chat" class="p-2 rounded-lg hover:bg-[var(--border-color)] transition-colors" title="Export Chat"></button>
+                    <button id="settings-button" class="p-2 rounded-lg hover:bg-[var(--border-color)] transition-colors" title="Settings"></button>
+                    <button id="clear-chat-button" class="p-2 rounded-lg hover:bg-[var(--border-color)] transition-colors" title="Clear Conversation"></button>
+                </div>
+            </header>
+
+            <!-- Chat Area -->
+            <main id="chat-container" class="flex-1 p-6 space-y-6 overflow-y-auto">
+                <!-- Welcome Message -->
+                <div class="chat-bubble-model flex justify-start group">
+                     <div class="bg-[var(--surface-primary)] border border-[var(--border-color)] text-[var(--text-primary)] p-4 rounded-xl rounded-bl-none max-w-2xl">
+                         <div class="markdown-content">
+                             <h3>Selamat Datang di Project Chimera!</h3>
+                             <p>Saya adalah asisten AI canggih yang kini terhubung ke internet. Tanyakan berita terbaru atau topik apa pun yang Anda inginkan.</p>
+                         </div>
+                     </div>
+                </div>
+            </main>
+
+            <!-- Input Footer -->
+            <footer class="p-4 border-t border-[var(--border-color)] shrink-0 space-y-3">
+                <div id="stop-generation-container" class="text-center hidden">
+                     <button id="stop-generation-btn" class="px-4 py-2 text-sm border border-yellow-500/50 text-yellow-300 rounded-lg hover:bg-yellow-500/20 transition-colors">Hentikan Generasi</button>
+                </div>
+                <form id="chat-form" class="flex items-center gap-3">
+                    <textarea id="user-input" placeholder="Ketik pesan Anda... (Shift+Enter untuk baris baru)" class="flex-1 p-3 pl-5 border border-[var(--border-color)] rounded-full bg-transparent focus:outline-none focus:ring-2 focus:ring-cyan-500 resize-none" rows="1"></textarea>
+                    <button type="submit" id="send-button" class="bg-cyan-600 text-white p-3 rounded-full shadow-lg transition transform hover:scale-110 active:scale-95 hover:shadow-cyan-500/50">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                    </button>
+                </form>
+            </footer>
+        </div>
+    </div>
+    
+    <!-- Modals -->
+    <!-- API Key Modal -->
+    <div id="api-key-modal" class="fixed inset-0 bg-black/70 backdrop-blur-md flex items-center justify-center hidden z-50 p-4">
+        <div class="bg-[var(--surface-dark)] border border-white/10 w-full max-w-lg p-6 rounded-xl shadow-2xl slide-in-up text-white">
+             <h2 class="text-2xl font-bold mb-4">Selamat Datang!</h2>
+             <p class="text-gray-300 mb-4 text-sm">Untuk mengaktifkan AI, masukkan Google AI API Key Anda. Anda bisa mendapatkannya secara gratis dari <a href="https://aistudio.google.com/app/apikey" target="_blank" class="text-cyan-400 underline hover:text-cyan-300">Google AI Studio</a>.</p>
+             <input type="password" id="api-key-input" placeholder="Masukkan API Key Anda di sini" class="w-full p-3 mb-4 border border-white/20 rounded-lg bg-white/5 focus:outline-none focus:ring-2 focus:ring-cyan-400">
+             <button id="save-api-key-btn" class="w-full px-4 py-3 rounded-lg bg-cyan-600 hover:bg-cyan-700 transition-colors font-semibold">Simpan dan Mulai</button>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settings-modal" class="fixed inset-0 bg-black/70 backdrop-blur-md flex items-center justify-center hidden z-50 p-4">
+        <div class="bg-[var(--surface-dark)] border border-white/10 w-full max-w-2xl p-6 rounded-xl shadow-2xl slide-in-up text-white">
+            <h2 class="text-2xl font-bold mb-6">Pengaturan</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Left Column -->
+                <div>
+                    <h3 class="text-lg font-semibold mb-2">Konfigurasi AI</h3>
+                    <div class="space-y-4">
+                        <div>
+                            <label for="persona-select" class="block text-sm font-medium text-gray-300 mb-1">Persona AI</label>
+                            <select id="persona-select" class="w-full p-2 border border-white/20 rounded-lg bg-white/5 focus:outline-none focus:ring-1 focus:ring-cyan-400">
+                                <option value="default">Asisten Standar</option>
+                                <option value="coder">Programmer Ahli</option>
+                                <option value="writer">Penulis Kreatif</option>
+                                <option value="scientist">Ilmuwan Penjelas</option>
+                                <option value="custom">Kustom</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="system-prompt-input" class="block text-sm font-medium text-gray-300 mb-1">System Prompt (Kustom)</label>
+                            <textarea id="system-prompt-input" rows="5" class="w-full p-2 border border-white/20 rounded-lg bg-white/5 focus:outline-none focus:ring-1 focus:ring-cyan-400" disabled></textarea>
+                        </div>
+                    </div>
+                </div>
+                <!-- Right Column -->
+                <div>
+                     <h3 class="text-lg font-semibold mb-2">Manajemen Data</h3>
+                     <div class="space-y-4">
+                         <div>
+                            <label for="api-key-settings-input" class="block text-sm font-medium text-gray-300 mb-1">API Key</label>
+                            <input type="password" id="api-key-settings-input" placeholder="Ganti API Key (opsional)" class="w-full p-2 border border-white/20 rounded-lg bg-white/5 focus:outline-none focus:ring-1 focus:ring-cyan-400">
+                        </div>
+                        <button id="clear-history-settings-btn" class="w-full py-2 bg-amber-600/50 border border-amber-500 text-amber-200 rounded-lg hover:bg-amber-600/80 transition-colors">Hapus Riwayat Chat</button>
+                        <button id="reset-all-settings-btn" class="w-full py-2 bg-red-600/50 border border-red-500 text-red-200 rounded-lg hover:bg-red-600/80 transition-colors">Reset Semua Pengaturan</button>
+                     </div>
+                </div>
+            </div>
+
+            <div class="flex justify-end mt-8 space-x-3">
+                 <button id="close-settings-button" class="px-4 py-2 rounded-lg hover:bg-white/10 transition-colors">Tutup</button>
+                 <button id="save-settings-button" class="px-4 py-2 rounded-lg bg-cyan-600 hover:bg-cyan-700 transition-colors font-semibold">Simpan Pengaturan</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Toast Notification -->
+    <div id="toast-container" class="fixed bottom-5 right-5 z-50"></div>
+
+<script>
+// ===================================================================================
+// Project Chimera - Ultimate AI Chatbot
+// Version: 1.1.0 (Online Mode Enabled)
+// ===================================================================================
+document.addEventListener('DOMContentLoaded', () => {
+
+    // --- DOM ELEMENT SELECTION ---
+    const dom = {
+        app: document.getElementById('app-container'),
+        chatContainer: document.getElementById('chat-container'),
+        chatForm: document.getElementById('chat-form'),
+        userInput: document.getElementById('user-input'),
+        sendButton: document.getElementById('send-button'),
+        themeToggle: document.getElementById('theme-toggle'),
+        exportChat: document.getElementById('export-chat'),
+        settingsButton: document.getElementById('settings-button'),
+        clearChatButton: document.getElementById('clear-chat-button'),
+        stopGenerationContainer: document.getElementById('stop-generation-container'),
+        stopGenerationBtn: document.getElementById('stop-generation-btn'),
+        aiStatus: document.getElementById('ai-status'),
+        apiKeyModal: document.getElementById('api-key-modal'),
+        apiKeyInput: document.getElementById('api-key-input'),
+        saveApiKeyBtn: document.getElementById('save-api-key-btn'),
+        settingsModal: document.getElementById('settings-modal'),
+        closeSettingsButton: document.getElementById('close-settings-button'),
+        saveSettingsButton: document.getElementById('save-settings-button'),
+        personaSelect: document.getElementById('persona-select'),
+        systemPromptInput: document.getElementById('system-prompt-input'),
+        apiKeySettingsInput: document.getElementById('api-key-settings-input'),
+        clearHistorySettingsBtn: document.getElementById('clear-history-settings-btn'),
+        resetAllSettingsBtn: document.getElementById('reset-all-settings-btn'),
+        toastContainer: document.getElementById('toast-container'),
+    };
+    
+    // --- STATE MANAGEMENT ---
+    let state = {
+        apiKey: null,
+        conversationHistory: [],
+        currentTheme: 'dark',
+        isGenerating: false,
+        abortController: null,
+        currentPersona: 'default',
+        customSystemPrompt: ''
+    };
+
+    // --- PERSONA PRESETS ---
+    const personas = {
+        default: "Anda adalah Asisten AI bernama Chimera. Anda sangat membantu, ramah, dan canggih. Anda menjawab dalam Bahasa Indonesia dengan format markdown untuk membuat jawaban lebih terstruktur dan mudah dibaca (gunakan heading, list, bold, code block, dll jika relevan). Gunakan informasi dari hasil pencarian untuk memberikan jawaban yang paling akurat dan terkini.",
+        coder: "Anda adalah seorang programmer ahli kelas dunia. Berikan jawaban yang jelas, efisien, dan berikan contoh kode jika memungkinkan. Selalu jelaskan konsep kompleks dengan cara yang sederhana. Format kode dengan benar menggunakan markdown. Gunakan pencarian untuk menemukan dokumentasi atau solusi terbaru.",
+        writer: "Anda adalah seorang penulis kreatif dan puitis. Gunakan bahasa yang kaya, kiasan, dan imajinatif. Ciptakan cerita, puisi, atau prosa yang menarik dan menyentuh emosi. Gunakan pencarian untuk mendapatkan inspirasi dari berbagai sumber.",
+        scientist: "Anda adalah seorang ilmuwan dan komunikator sains. Jelaskan topik-topik ilmiah dan teknis dengan akurat, objektif, dan menggunakan analogi yang mudah dipahami. Prioritaskan kebenaran dan data dari sumber terpercaya yang ditemukan melalui pencarian."
+    };
+    
+    // --- INITIALIZATION ---
+    function init() {
+        loadSettings();
+        setupEventListeners();
+        updateThemeUI();
+        autoResizeTextarea();
+        
+        if (!state.apiKey) {
+            showModal(dom.apiKeyModal);
+        } else {
+            loadConversationHistory();
+        }
+    }
+
+    // --- LOCAL STORAGE & STATE ---
+    function loadSettings() {
+        state.apiKey = localStorage.getItem('chimera_apiKey');
+        state.currentTheme = localStorage.getItem('chimera_theme') || 'dark';
+        document.documentElement.className = state.currentTheme;
+        state.currentPersona = localStorage.getItem('chimera_persona') || 'default';
+        state.customSystemPrompt = localStorage.getItem('chimera_customSystemPrompt') || '';
+    }
+
+    function saveSettings() {
+        if (state.apiKey) localStorage.setItem('chimera_apiKey', state.apiKey);
+        localStorage.setItem('chimera_theme', state.currentTheme);
+        localStorage.setItem('chimera_persona', state.currentPersona);
+        localStorage.setItem('chimera_customSystemPrompt', state.customSystemPrompt);
+        showToast('Pengaturan disimpan!');
+    }
+    
+    function loadConversationHistory() {
+        const history = localStorage.getItem('chimera_conversationHistory');
+        if (history) {
+            state.conversationHistory = JSON.parse(history);
+            dom.chatContainer.innerHTML = ''; // Clear welcome message
+            state.conversationHistory.forEach(msg => {
+                if(msg.role === 'user') addMessage('user', msg.parts[0].text);
+                else addMessage('model', msg.parts[0].text);
+            });
+        }
+    }
+    
+    function saveConversationHistory() {
+        localStorage.setItem('chimera_conversationHistory', JSON.stringify(state.conversationHistory));
+    }
+    
+    // --- UI/DOM MANIPULATION ---
+    function showModal(modal) { modal.classList.remove('hidden'); }
+    function hideModal(modal) { modal.classList.add('hidden'); }
+    
+    function addMessage(sender, text) {
+        const messageWrapper = document.createElement('div');
+        const isUser = sender === 'user';
+        messageWrapper.className = `flex group ${isUser ? 'justify-end' : 'justify-start'}`;
+
+        const bubble = document.createElement('div');
+        bubble.className = 'border p-4 rounded-xl max-w-3xl slide-in-up';
+        bubble.style.borderColor = 'var(--border-color)';
+        
+        if (isUser) {
+            bubble.className += ' rounded-br-none bg-cyan-600/20 text-[var(--text-primary)]';
+            bubble.innerHTML = `<div class="markdown-content">${marked.parse(text)}</div>`;
+        } else {
+            bubble.className += ' rounded-bl-none bg-[var(--surface-primary)] text-[var(--text-primary)]';
+            bubble.innerHTML = `<div class="markdown-content">${marked.parse(text)}</div>`;
+        }
+
+        messageWrapper.appendChild(bubble);
+        dom.chatContainer.appendChild(messageWrapper);
+        highlightCodeInElement(bubble);
+        dom.chatContainer.scrollTop = dom.chatContainer.scrollHeight;
+        return bubble;
+    }
+
+    function updateLastMessageStream(bubble, newContent) {
+        const contentDiv = bubble.querySelector('.markdown-content');
+        contentDiv.innerHTML = marked.parse(newContent + '<span class="blinking-cursor"></span>');
+        dom.chatContainer.scrollTop = dom.chatContainer.scrollHeight;
+    }
+
+    function finalizeLastMessage(bubble, finalContent) {
+        const contentDiv = bubble.querySelector('.markdown-content');
+        contentDiv.innerHTML = marked.parse(finalContent);
+        highlightCodeInElement(bubble);
+    }
+
+    function showToast(message, type = 'success') {
+        const toast = document.createElement('div');
+        const bgColor = type === 'error' ? 'bg-red-500' : 'bg-green-600';
+        toast.className = `fade-in ${bgColor} text-white px-4 py-2 rounded-lg shadow-lg`;
+        toast.textContent = message;
+        dom.toastContainer.appendChild(toast);
+        setTimeout(() => { toast.remove(); }, 4000);
+    }
+    
+    function updateThemeUI() {
+        if (state.currentTheme === 'dark') {
+            document.documentElement.classList.add('dark');
+            document.documentElement.classList.remove('light');
+            dom.themeToggle.innerHTML = `<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>`;
+        } else {
+            document.documentElement.classList.remove('dark');
+            document.documentElement.classList.add('light');
+            dom.themeToggle.innerHTML = `<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>`;
+        }
+        dom.exportChat.innerHTML = `<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>`;
+        dom.settingsButton.innerHTML = `<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>`;
+        dom.clearChatButton.innerHTML = `<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>`;
+    }
+
+    function autoResizeTextarea() {
+        const textarea = dom.userInput;
+        textarea.style.height = 'auto';
+        const maxHeight = 200; 
+        const newHeight = Math.min(textarea.scrollHeight, maxHeight);
+        textarea.style.height = `${newHeight}px`;
+    }
+
+    // --- UTILITIES ---
+    function highlightCodeInElement(element) {
+        element.querySelectorAll('pre code').forEach((block) => {
+            hljs.highlightElement(block);
+            const pre = block.parentElement;
+            if (pre.querySelector('.copy-code-btn')) return; // Don't add if already exists
+            const copyBtn = document.createElement('button');
+            copyBtn.innerText = 'Salin';
+            copyBtn.className = 'copy-code-btn';
+            copyBtn.onclick = () => {
+                navigator.clipboard.writeText(block.innerText);
+                copyBtn.innerText = 'Disalin!';
+                setTimeout(() => { copyBtn.innerText = 'Salin'; }, 2000);
+            };
+            pre.appendChild(copyBtn);
+        });
+    }
+
+    function exportConversation() {
+        let content = `# Riwayat Chat Project Chimera\n\n`;
+        content += `*Tanggal Ekspor: ${new Date().toLocaleString('id-ID')}*\n\n---\n\n`;
+        state.conversationHistory.forEach(msg => {
+            const prefix = msg.role === 'user' ? '👤 Pengguna:' : '🤖 AI (Chimera):';
+            content += `${prefix}\n${msg.parts[0].text}\n\n---\n\n`;
+        });
+        const blob = new Blob([content], { type: 'text/markdown;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `chimera-chat-${Date.now()}.md`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        showToast('Riwayat chat diekspor!');
+    }
+    
+    // --- CORE API LOGIC ---
+    async function sendMessageToAI(userMessage) {
+        state.isGenerating = true;
+        state.abortController = new AbortController();
+        dom.aiStatus.textContent = 'Mencari online...';
+        dom.stopGenerationContainer.classList.remove('hidden');
+        
+        addMessage('user', userMessage);
+        state.conversationHistory.push({ role: 'user', parts: [{ text: userMessage }] });
+        saveConversationHistory();
+        
+        let fullResponse = "";
+        const modelBubble = addMessage('model', '<span class="blinking-cursor"></span>');
+        
+        const systemPromptText = state.currentPersona === 'custom' ? state.customSystemPrompt : personas[state.currentPersona];
+
+        try {
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${state.apiKey}`;
+
+            // --- PERUBAHAN UTAMA: MENAMBAHKAN FITUR PENCARIAN ---
+            const payload = {
+                contents: state.conversationHistory,
+                systemInstruction: { parts: [{ text: systemPromptText }] },
+                tools: [
+                    { "google_search": {} }
+                ],
+            };
+            // ----------------------------------------------------
+            
+            dom.aiStatus.textContent = 'Menyusun jawaban...';
+
+            const response = await fetch(apiUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload),
+                signal: state.abortController.signal,
+            });
+
+            if (!response.ok) {
+                 let errorText = `API Error: ${response.status} ${response.statusText}`;
+                try {
+                    const errorData = await response.json();
+                    if (errorData && errorData.error && errorData.error.message) {
+                        errorText = errorData.error.message;
+                    }
+                } catch (e) { /* ignore if response is not json */ }
+                throw new Error(errorText);
+            }
+            
+            const result = await response.json();
+            fullResponse = result.candidates?.[0]?.content?.parts?.[0]?.text || "Maaf, saya tidak menerima respons yang valid.";
+            state.conversationHistory.push({ role: 'model', parts: [{ text: fullResponse }] });
+
+        } catch (error) {
+            if (error.name === 'AbortError') {
+                fullResponse = fullResponse ? fullResponse + "\n\n*(Generasi dihentikan)*" : "*(Generasi dihentikan)*";
+                showToast('Generasi dihentikan.', 'warning');
+            } else {
+                fullResponse = `**Terjadi Kesalahan:**\n\`\`\`\n${error.message}\n\`\`\`\n\nPastikan API Key Anda benar dan koneksi internet stabil.`;
+                console.error("API Error:", error);
+            }
+        } finally {
+            state.isGenerating = false;
+            dom.aiStatus.textContent = 'Ready';
+            dom.stopGenerationContainer.classList.add('hidden');
+            finalizeLastMessage(modelBubble, fullResponse);
+            saveConversationHistory();
+        }
+    }
+
+    // --- EVENT LISTENERS ---
+    function setupEventListeners() {
+        dom.chatForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const message = dom.userInput.value.trim();
+            if (message && !state.isGenerating) {
+                sendMessageToAI(message);
+                dom.userInput.value = '';
+                autoResizeTextarea();
+            }
+        });
+        
+        dom.userInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                dom.chatForm.requestSubmit();
+            }
+        });
+
+        dom.userInput.addEventListener('input', autoResizeTextarea);
+
+        dom.saveApiKeyBtn.addEventListener('click', () => {
+            const key = dom.apiKeyInput.value.trim();
+            if (key) {
+                state.apiKey = key;
+                localStorage.setItem('chimera_apiKey', key);
+                hideModal(dom.apiKeyModal);
+                showToast('API Key disimpan!');
+            } else {
+                showToast('API Key tidak boleh kosong.', 'error');
+            }
+        });
+        
+        dom.themeToggle.addEventListener('click', () => {
+            state.currentTheme = state.currentTheme === 'dark' ? 'light' : 'dark';
+            updateThemeUI();
+            localStorage.setItem('chimera_theme', state.currentTheme);
+        });
+        
+        dom.exportChat.addEventListener('click', exportConversation);
+
+        dom.clearChatButton.addEventListener('click', () => {
+            if (confirm('Anda yakin ingin menghapus seluruh riwayat percakapan ini?')) {
+                state.conversationHistory = [];
+                dom.chatContainer.innerHTML = '';
+                localStorage.removeItem('chimera_conversationHistory');
+                showToast('Riwayat chat dihapus.');
+            }
+        });
+
+        dom.stopGenerationBtn.addEventListener('click', () => {
+            if (state.abortController) {
+                state.abortController.abort();
+            }
+        });
+
+        // Settings Modal Listeners
+        dom.settingsButton.addEventListener('click', () => {
+            dom.apiKeySettingsInput.value = state.apiKey || '';
+            dom.personaSelect.value = state.currentPersona;
+            dom.systemPromptInput.value = state.customSystemPrompt;
+            dom.systemPromptInput.disabled = state.currentPersona !== 'custom';
+            showModal(dom.settingsModal);
+        });
+        
+        dom.closeSettingsButton.addEventListener('click', () => hideModal(dom.settingsModal));
+        
+        dom.personaSelect.addEventListener('change', (e) => {
+            dom.systemPromptInput.disabled = e.target.value !== 'custom';
+        });
+
+        dom.saveSettingsButton.addEventListener('click', () => {
+            const newKey = dom.apiKeySettingsInput.value.trim();
+            if (newKey) state.apiKey = newKey;
+            
+            state.currentPersona = dom.personaSelect.value;
+            if (state.currentPersona === 'custom') {
+                state.customSystemPrompt = dom.systemPromptInput.value.trim();
+            }
+            
+            saveSettings();
+            hideModal(dom.settingsModal);
+        });
+        
+        dom.clearHistorySettingsBtn.addEventListener('click', () => {
+             dom.clearChatButton.click();
+        });
+        
+        dom.resetAllSettingsBtn.addEventListener('click', () => {
+            if(confirm('PERINGATAN: Aksi ini akan menghapus API Key, riwayat chat, dan semua pengaturan. Lanjutkan?')) {
+                localStorage.clear();
+                state.apiKey = null;
+                state.conversationHistory = [];
+                dom.chatContainer.innerHTML = '';
+                hideModal(dom.settingsModal);
+                showModal(dom.apiKeyModal);
+                showToast('Semua pengaturan telah direset.', 'warning');
+            }
+        });
+    }
+
+    // --- Let's Go! ---
+    init();
+});
+</script>
+</body>
+</html>
