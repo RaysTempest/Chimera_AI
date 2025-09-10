@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Project Chimera v2.1 - Asisten AI Canggih</title>
+    <title>Project Chimera v2.2 - Asisten AI Canggih</title>
 
     <!-- External Libraries -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -72,6 +72,15 @@
              background: linear-gradient(90deg, var(--bg-light), #e2e8f0, var(--bg-light));
              background-size: 200% 200%;
         }
+        .typing-cursor {
+            display: inline-block;
+            width: 8px;
+            height: 1.2em;
+            background-color: var(--text-primary);
+            animation: blink 1s step-end infinite;
+            vertical-align: bottom;
+        }
+        @keyframes blink { 50% { opacity: 0; } }
 
         .markdown-content table { width: 100%; border-collapse: collapse; margin: 1em 0; }
         .markdown-content th, .markdown-content td { border: 1px solid var(--border-primary); padding: 0.75rem; }
@@ -155,8 +164,12 @@
     
     <script>
     // ===================================================================================
-    // Project Chimera v2.1 - Ultimate AI Assistant
-    // Perbaikan: UI/UX, Animasi, Fullscreen, Scrolling, Penanganan Error
+    // Project Chimera v2.2 - Asisten AI Canggih
+    // Changelog:
+    // - [FIX] Perbaikan logika penghapusan obrolan, memilih obrolan terbaru.
+    // - [ADD] Fitur menyematkan (pin) obrolan di bagian atas.
+    // - [OPT] Proses respons AI terasa lebih cepat dengan streaming simulasi yang dioptimalkan.
+    // - [FIX] Mode layar penuh lebih robust, menangani keluar dengan tombol ESC.
     // ===================================================================================
     document.addEventListener('DOMContentLoaded', () => {
 
@@ -248,8 +261,9 @@
         function createNewConversation() {
             const newId = `chat_${Date.now()}`;
             const newTitle = `Percakapan Baru`;
-            state.conversations[newId] = { id: newId, title: newTitle, history: [], date: new Date() };
+            state.conversations[newId] = { id: newId, title: newTitle, history: [], date: new Date(), pinned: false };
             setActiveConversation(newId);
+            saveAllData(); // Save new conversation
         }
 
         function setActiveConversation(id) {
@@ -277,28 +291,63 @@
         
         function loadConversations() {
             dom.conversationHistory.innerHTML = '';
-            const sortedConversations = Object.values(state.conversations).sort((a, b) => new Date(b.date) - new Date(a.date));
+            const sortedConversations = Object.values(state.conversations).sort((a, b) => {
+                const pinA = a.pinned || false;
+                const pinB = b.pinned || false;
+                if (pinA !== pinB) return pinB - pinA; // Pinned chats first
+                return new Date(b.date) - new Date(a.date); // Then sort by date
+            });
+            
             sortedConversations.forEach(conv => {
                 const isActive = conv.id === state.activeConversationId;
                 const convElement = document.createElement('div');
                 convElement.className = `flex items-center justify-between p-2 rounded-lg cursor-pointer group transition-all duration-200 ${isActive ? 'bg-blue-600/30' : 'hover:bg-white/10'}`;
                 convElement.dataset.id = conv.id;
                 
+                const pinIcon = conv.pinned ? `<i data-lucide="pin" class="w-4 h-4 inline-block mr-2 text-blue-400 flex-shrink-0"></i>` : '';
+                
                 convElement.innerHTML = `
-                    <span class="truncate flex-1 pr-2">${conv.title}</span>
-                    <button class="delete-chat-btn opacity-0 group-hover:opacity-100 text-gray-400 hover:text-white transition-opacity p-1">
-                        <i data-lucide="trash-2" class="w-4 h-4"></i>
-                    </button>
+                    <div class="flex items-center truncate flex-1">
+                        ${pinIcon}
+                        <span class="truncate">${conv.title}</span>
+                    </div>
+                    <div class="flex items-center opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
+                        <button class="pin-chat-btn p-1 text-gray-400 hover:text-white" title="${conv.pinned ? 'Lepas Sematan' : 'Sematkan'}">
+                            <i data-lucide="${conv.pinned ? 'pin-off' : 'pin'}" class="w-4 h-4"></i>
+                        </button>
+                        <button class="delete-chat-btn p-1 text-gray-400 hover:text-white" title="Hapus">
+                            <i data-lucide="trash-2" class="w-4 h-4"></i>
+                        </button>
+                    </div>
                 `;
                 
                 convElement.addEventListener('click', (e) => {
-                    if (e.target.closest('.delete-chat-btn')) {
+                    const targetPin = e.target.closest('.pin-chat-btn');
+                    const targetDelete = e.target.closest('.delete-chat-btn');
+
+                    if (targetPin) {
+                        e.stopPropagation();
+                        conv.pinned = !conv.pinned;
+                        saveAllData();
+                        loadConversations();
+                        return;
+                    }
+                    if (targetDelete) {
+                        e.stopPropagation();
                         showCustomConfirm('Hapus percakapan?', `Anda yakin ingin menghapus "${conv.title}"? Aksi ini tidak dapat dibatalkan.`, () => {
+                            const wasActive = state.activeConversationId === conv.id;
                             delete state.conversations[conv.id];
-                            if (state.activeConversationId === conv.id) {
-                                const nextConvId = Object.keys(state.conversations)[0];
-                                if (nextConvId) setActiveConversation(nextConvId);
-                                else createNewConversation();
+                            
+                            if (wasActive) {
+                                const remainingSorted = Object.values(state.conversations)
+                                    .sort((a, b) => new Date(b.date) - new Date(a.date));
+                                
+                                if (remainingSorted.length > 0) {
+                                    setActiveConversation(remainingSorted[0].id);
+                                } else {
+                                    createNewConversation(); // This will save and load
+                                    return;
+                                }
                             }
                             saveAllData();
                             loadConversations();
@@ -330,7 +379,7 @@
              dom.chatContainer.innerHTML = `
                  <div class="flex flex-col items-center justify-center h-full text-center fade-in">
                      <div class="max-w-2xl">
-                         <h1 class="text-4xl md:text-5xl font-bold tracking-tight">Project Chimera 2.1</h1>
+                         <h1 class="text-4xl md:text-5xl font-bold tracking-tight">Project Chimera 2.2</h1>
                          <p class="mt-4 text-gray-400">Asisten AI canggih Anda. Terhubung ke web, mampu menganalisis gambar, membuat diagram, dan banyak lagi. Bagaimana saya bisa membantu Anda hari ini?</p>
                          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-8">
                             ${prompts.map(p => `
@@ -408,26 +457,26 @@
 
         async function streamMessage(bubble, fullResponse) {
             const contentDiv = bubble.querySelector('.markdown-content');
-            contentDiv.innerHTML = '';
             let displayedText = '';
             let buffer = '';
+            const cursor = `<span class="typing-cursor"></span>`;
             
-            const words = fullResponse.split(/(\s+)/);
+            const words = fullResponse.split(/(\s+|`|\*|_|=|\n)/);
             for (const word of words) {
                 if (state.abortController && state.abortController.signal.aborted) break;
                 buffer += word;
-                if (buffer.length > 10) { // Update in chunks for performance
+                // Update rendering more frequently for a smoother feel
+                if (buffer.length > 5 || word.includes('\n')) {
                     displayedText += buffer;
-                    contentDiv.innerHTML = marked.parse(displayedText);
+                    contentDiv.innerHTML = marked.parse(displayedText + cursor);
                     buffer = '';
+                    dom.chatContainer.scrollTop = dom.chatContainer.scrollHeight;
                 }
-                dom.chatContainer.scrollTop = dom.chatContainer.scrollHeight;
-                await new Promise(resolve => setTimeout(resolve, 15));
+                await new Promise(resolve => setTimeout(resolve, 5)); // Faster delay
             }
             
-            // Final render with any remaining buffer
             displayedText += buffer;
-            contentDiv.innerHTML = marked.parse(displayedText);
+            contentDiv.innerHTML = marked.parse(displayedText); // Final render without cursor
             postProcessMessage(bubble);
         }
         
@@ -439,14 +488,9 @@
         
         function updateThemeUI() {
             document.documentElement.className = state.currentTheme;
-
-            // Find and remove the old icon, which could be an <i> or <svg>
             const oldIcon = dom.themeToggle.querySelector('i') || dom.themeToggle.querySelector('svg');
-            if (oldIcon) {
-                oldIcon.remove();
-            }
+            if (oldIcon) oldIcon.remove();
 
-            // Create the new icon placeholder
             const newIcon = document.createElement('i');
             if (state.currentTheme === 'dark') {
                 dom.themeText.textContent = 'Mode Terang';
@@ -455,14 +499,9 @@
                 dom.themeText.textContent = 'Mode Gelap';
                 newIcon.setAttribute('data-lucide', 'moon');
             }
-            
-            // Insert the new <i> tag before the <span> text
             dom.themeToggle.insertBefore(newIcon, dom.themeText);
-
-            // Let Lucide process the new icon
             lucide.createIcons();
         }
-
 
         function autoResizeTextarea() {
             const textarea = dom.userInput;
@@ -623,14 +662,13 @@
         function toggleFullscreen() {
             if (!document.fullscreenElement) {
                 dom.appContainer.requestFullscreen().catch(err => {
-                    alert(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`);
+                    showToast(`Gagal mode layar penuh: ${err.message}`, 'error');
                 });
-                dom.fullscreenBtn.innerHTML = `<i data-lucide="minimize"></i> Keluar Layar Penuh`;
             } else {
-                document.exitFullscreen();
-                dom.fullscreenBtn.innerHTML = `<i data-lucide="maximize"></i> Layar Penuh`;
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                }
             }
-            lucide.createIcons();
         }
         
         // --- CORE API LOGIC ---
@@ -745,6 +783,16 @@
             dom.settingsButton.addEventListener('click', showSettingsModal);
             dom.fullscreenBtn.addEventListener('click', toggleFullscreen);
 
+            // Robust fullscreen change handler (e.g., for ESC key)
+            document.addEventListener('fullscreenchange', () => {
+                if (document.fullscreenElement) {
+                    dom.fullscreenBtn.innerHTML = `<i data-lucide="minimize"></i> Keluar Layar Penuh`;
+                } else {
+                    dom.fullscreenBtn.innerHTML = `<i data-lucide="maximize"></i> Layar Penuh`;
+                }
+                lucide.createIcons();
+            });
+
             dom.imageUploadInput.addEventListener('change', async (e) => {
                 const file = e.target.files[0];
                 if (file) {
@@ -779,7 +827,6 @@
 
             // Delegated event listeners for dynamic content
             document.body.addEventListener('click', (e) => {
-                // Settings Modal
                 const modalContent = e.target.closest('.w-full.max-w-2xl');
                 if (!modalContent && !e.target.closest('#settings-button')) hideModal();
                 if (e.target.id === 'close-settings-button') hideModal();
@@ -802,8 +849,7 @@
                         initState();
                         hideModal();
                         showSettingsModal();
-                        loadConversations();
-                        createNewConversation();
+                        createNewConversation(); // Creates, saves, and loads
                         showToast('Semua data telah direset.', 'warning');
                     });
                 }
@@ -848,5 +894,3 @@
     </script>
 </body>
 </html>
-
-
