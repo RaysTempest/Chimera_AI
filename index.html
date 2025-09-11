@@ -3,18 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Project Chimera v2.2 - Asisten AI Canggih</title>
+    <title>Project Chimera v7.0 - Asisten AI Canggih</title>
 
-    <!-- External Libraries -->
+    <!-- Pustaka Eksternal -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/4.3.0/marked.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
     <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
 
-    <!-- Fonts and Icons -->
+    <!-- Font dan Ikon -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Orbitron:wght@500;700&display=swap" rel="stylesheet">
@@ -25,8 +26,9 @@
             --bg-dark: #020617; --bg-light: #f8fafc;
             --surface-dark: #0f172a; --surface-light: #ffffff;
             --text-dark: #e2e8f0; --text-light: #0f172a;
-            --border-dark: #1e293b; --border-light: #cbd5e1;
+            --border-dark: #1e293b; --border-light: #e2e8f0;
             --accent: #3b82f6; --accent-hover: #2563eb;
+            --accent-glow: rgba(59, 130, 246, 0.5);
             --font-body: 'Inter', sans-serif;
             --font-header: 'Orbitron', sans-serif;
         }
@@ -53,58 +55,55 @@
             background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(24px);
             -webkit-backdrop-filter: blur(24px); border: 1px solid var(--border-primary);
         }
-        html.light .glass-effect { background: rgba(255, 255, 255, 0.6); }
+        html.light .glass-effect { background: rgba(255, 255, 255, 0.7); }
 
-        /* Animations */
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
-        .fade-in { animation: fadeIn 0.6s ease-out forwards; }
+        /* --- Animasi & Transisi --- */
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideInUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes slideInRight { from { opacity: 0; transform: translateX(-15px); } to { opacity: 1; transform: translateX(0); } }
+        @keyframes slideInLeft { from { opacity: 0; transform: translateX(15px); } to { opacity: 1; transform: translateX(0); } }
+        @keyframes scaleIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+        @keyframes slideInUpRight { from { opacity: 0; transform: translate(20px, 20px); } to { opacity: 1; transform: translate(0, 0); } }
+        
+        .toast-animation { animation: slideInUpRight 0.5s ease-out forwards; }
+        
         @keyframes background-pan {
-          0% { background-position: 0% 50%; }
-          50% { background-position: 100% 50%; }
-          100% { background-position: 0% 50%; }
+          0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; }
         }
         .animated-bg {
             background: linear-gradient(90deg, var(--bg-dark), #0f172a, var(--bg-dark));
-            background-size: 200% 200%;
-            animation: background-pan 15s ease infinite;
+            background-size: 200% 200%; animation: background-pan 15s ease infinite;
         }
         html.light .animated-bg {
              background: linear-gradient(90deg, var(--bg-light), #e2e8f0, var(--bg-light));
              background-size: 200% 200%;
         }
-        .typing-cursor {
-            display: inline-block;
-            width: 8px;
-            height: 1.2em;
-            background-color: var(--text-primary);
-            animation: blink 1s step-end infinite;
-            vertical-align: bottom;
-        }
-        @keyframes blink { 50% { opacity: 0; } }
 
         .markdown-content table { width: 100%; border-collapse: collapse; margin: 1em 0; }
         .markdown-content th, .markdown-content td { border: 1px solid var(--border-primary); padding: 0.75rem; }
         .markdown-content th { background-color: var(--surface-primary); }
+        .markdown-content pre { position: relative; }
         
-        @keyframes typing-dots {
-            0%, 20% { content: '.'; }
-            40% { content: '..'; }
-            60%, 100% { content: '...'; }
+        .streaming-cursor::after {
+            content: '▍'; animation: blink 1s step-end infinite; color: var(--accent);
+            margin-left: 2px; font-weight: bold;
         }
-        .thinking-indicator::after {
-            content: '.';
-            animation: typing-dots 1.4s linear infinite;
-        }
+        @keyframes blink { 50% { opacity: 0; } }
+        @keyframes pulse-red { 0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); } 70% { box-shadow: 0 0 0 5px rgba(239, 68, 68, 0); } }
+        .api-status-pulse { animation: pulse-red 2s infinite; }
+        @keyframes mic-pulse { 0%, 100% { color: var(--accent); } 50% { color: #f87171; } }
+        .mic-listening { animation: mic-pulse 1.5s ease-in-out infinite; }
     </style>
 </head>
 <body class="antialiased">
 
-    <div id="app-container" class="h-screen w-screen flex animated-bg">
-        <!-- Sidebar -->
-        <aside id="sidebar" class="bg-black/30 h-full flex flex-col w-72 p-4 transition-all duration-300 ease-in-out -translate-x-full md:translate-x-0 md:relative absolute z-30">
+    <div id="app-container" class="h-screen w-screen flex flex-col md:flex-row animated-bg">
+        <div id="sidebar-overlay" class="fixed inset-0 bg-black/60 z-30 hidden md:hidden transition-opacity duration-300"></div>
+        
+        <aside id="sidebar" class="bg-black/30 h-full flex flex-col w-72 p-4 transition-transform duration-300 ease-in-out fixed inset-y-0 left-0 -translate-x-full md:relative md:translate-x-0 z-40">
             <div class="flex items-center justify-between mb-4">
-                 <h2 class="text-xl font-bold tracking-wider">CHIMERA</h2>
-                 <button id="sidebar-close" class="md:hidden p-1 rounded-full hover:bg-white/10"><i data-lucide="x"></i></button>
+                 <h2 class="text-xl font-bold tracking-wider">CHIMERA v7</h2>
+                 <button id="sidebar-close" class="md:hidden p-1 rounded-full hover:bg-white/10 transition-colors"><i data-lucide="x"></i></button>
             </div>
             <button id="new-chat-btn" class="flex items-center justify-center gap-2 w-full p-2.5 rounded-lg bg-[var(--accent)] text-white font-semibold hover:bg-[var(--accent-hover)] transition-all duration-200 transform hover:scale-105 active:scale-100">
                 <i data-lucide="plus"></i> Obrolan Baru
@@ -112,21 +111,22 @@
             <div id="conversation-history" class="mt-4 flex-1 overflow-y-auto pr-2 space-y-2"></div>
             <div class="pt-4 border-t border-[var(--border-primary)] space-y-1">
                 <button id="fullscreen-btn" class="flex items-center gap-3 w-full p-2 rounded-lg hover:bg-white/10 transition-colors"><i data-lucide="maximize"></i> Layar Penuh</button>
+                <button id="api-key-button" class="flex items-center justify-between w-full p-2 rounded-lg hover:bg-white/10 transition-colors">
+                    <span class="flex items-center gap-3"><i data-lucide="key-round"></i> API Key</span>
+                    <span id="api-key-status" class="w-2.5 h-2.5 rounded-full transition-colors"></span>
+                </button>
                 <button id="settings-button" class="flex items-center gap-3 w-full p-2 rounded-lg hover:bg-white/10 transition-colors"><i data-lucide="settings"></i> Pengaturan</button>
                 <button id="theme-toggle" class="flex items-center gap-3 w-full p-2 rounded-lg hover:bg-white/10 transition-colors"><i data-lucide="sun"></i> <span id="theme-text">Mode Terang</span></button>
             </div>
         </aside>
 
-        <!-- Main Content -->
-        <div class="flex-1 flex flex-col h-full relative">
-             <button id="sidebar-toggle" class="md:hidden absolute top-4 left-4 z-20 p-2 bg-black/40 backdrop-blur-sm rounded-md hover:bg-white/20 transition-all"><i data-lucide="menu"></i></button>
-            <main class="flex-1 flex flex-col glass-effect m-2 md:m-4 rounded-2xl overflow-hidden shadow-2xl">
-                <!-- Chat Area -->
-                <div id="chat-container" class="flex-1 p-4 sm:p-6 space-y-6 overflow-y-auto">
-                    <!-- Welcome or Chat Messages will be rendered here -->
-                </div>
-
-                <!-- Input Footer -->
+        <main class="flex-1 flex flex-col h-full relative overflow-hidden">
+             <header class="flex items-center justify-between p-4 glass-effect m-2 md:m-4 mb-0 rounded-t-2xl rounded-b-none border-b border-[var(--border-primary)] shrink-0">
+                <h1 id="chat-title" class="text-lg font-semibold truncate pr-4">Percakapan Baru</h1>
+                <button id="sidebar-toggle" class="p-2 rounded-md hover:bg-white/20 transition-all md:hidden"><i data-lucide="menu"></i></button>
+             </header>
+            <div class="flex-1 flex flex-col glass-effect m-2 md:m-4 mt-0 rounded-b-2xl overflow-hidden shadow-2xl">
+                <div id="chat-container" class="flex-1 p-4 sm:p-6 space-y-6 overflow-y-auto"></div>
                 <footer class="p-4 border-t border-[var(--border-primary)] shrink-0 space-y-3">
                     <div id="stop-generation-container" class="text-center hidden">
                          <button id="stop-generation-btn" class="px-4 py-1.5 text-sm border border-yellow-500/50 text-yellow-300 rounded-lg hover:bg-yellow-500/20 transition-colors flex items-center gap-2 mx-auto">
@@ -139,109 +139,95 @@
                             <i data-lucide="paperclip"></i>
                         </label>
                         <input type="file" id="image-upload-input" class="hidden" accept="image/*">
-                        
                         <div class="flex-1 relative">
-                            <textarea id="user-input" placeholder="Ketik pesan atau unggah gambar..." class="w-full p-3 pl-4 pr-12 border border-[var(--border-primary)] rounded-2xl bg-transparent focus:outline-none focus:ring-2 focus:ring-[var(--accent)] transition-all resize-none" rows="1"></textarea>
+                            <textarea id="user-input" placeholder="Ketik pesan, unggah gambar, atau gunakan mic..." class="w-full p-3 pl-4 pr-12 border border-[var(--border-primary)] rounded-2xl bg-transparent focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:shadow-[0_0_15px_var(--accent-glow)] transition-all resize-none" rows="1"></textarea>
                             <button id="mic-btn" class="absolute right-4 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-white transition-colors" title="Input suara">
                                 <i data-lucide="mic"></i>
                             </button>
                         </div>
-
-                        <button type="submit" id="send-button" class="bg-[var(--accent)] text-white p-3 rounded-full shadow-lg transition-all transform hover:scale-110 hover:bg-[var(--accent-hover)] active:scale-100 disabled:bg-gray-500 disabled:scale-100 disabled:cursor-not-allowed">
+                        <button type="submit" id="send-button" class="bg-gradient-to-br from-blue-500 to-blue-600 text-white p-3 rounded-full shadow-lg transition-all transform hover:scale-110 hover:shadow-xl hover:shadow-blue-500/40 active:scale-100 disabled:bg-gray-500 disabled:from-gray-500 disabled:scale-100 disabled:cursor-not-allowed disabled:shadow-none">
                             <i data-lucide="send"></i>
                         </button>
                     </div>
                 </footer>
-            </main>
-        </div>
+            </div>
+        </main>
     </div>
     
-    <!-- Modals -->
-    <div id="modal-backdrop" class="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center hidden z-50 p-4 transition-opacity duration-300"></div>
-    
-    <!-- Toast Container -->
+    <div id="modal-backdrop" class="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center opacity-0 pointer-events-none z-50 p-4 transition-opacity duration-300"></div>
     <div id="toast-container" class="fixed bottom-5 right-5 z-[100] space-y-2"></div>
     
     <script>
     // ===================================================================================
-    // Project Chimera v2.2 - Asisten AI Canggih
-    // Changelog:
-    // - [FIX] Perbaikan logika penghapusan obrolan, memilih obrolan terbaru.
-    // - [ADD] Fitur menyematkan (pin) obrolan di bagian atas.
-    // - [OPT] Proses respons AI terasa lebih cepat dengan streaming simulasi yang dioptimalkan.
-    // - [FIX] Mode layar penuh lebih robust, menangani keluar dengan tombol ESC.
+    // Project Chimera v7.0 - Ultimate AI Assistant
+    // Perbaikan: Tombol Salin Kode, Judul Chat Dinamis, UI Polish, Persona Baru
     // ===================================================================================
     document.addEventListener('DOMContentLoaded', () => {
 
         const dom = {};
-        const state = {};
+        const state = {
+            audioContext: null,
+            currentPlayingAudio: null,
+        };
+
+        const personas = {
+            default: "Anda adalah Asisten AI canggih dan ramah bernama Chimera. Jawaban Anda harus dalam Bahasa Indonesia yang jelas dan informatif. Anda terhubung ke internet untuk data real-time via Google Search. Manfaatkan format markdown secara ekstensif (tabel, list, blok kode, dll). Anda adalah ahli di berbagai bidang: matematika, fisika, biologi, sejarah, dan pengetahuan umum. Selalu tampilkan rumus matematika yang kompleks menggunakan sintaks LaTeX (`$$...$$` untuk block atau `$...$` untuk inline). Jika diminta membuat diagram, gunakan sintaks mermaid. Anda juga bisa menganalisis gambar.",
+            coder: "Anda adalah programmer ahli dan arsitek perangkat lunak senior. Berikan jawaban yang jelas, efisien, dengan contoh kode yang bersih dan best-practice. Jelaskan konsep kompleks secara sederhana. Selalu gunakan pencarian untuk dokumentasi dan versi library terbaru. Format kode dengan benar menggunakan markdown dan sebutkan bahasanya.",
+            writer: "Anda adalah penulis kreatif dan editor sastra. Gunakan bahasa yang kaya, kiasan, dan imajinatif. Ciptakan narasi yang menarik dan puisi yang menggugah. Gunakan pencarian untuk riset mendalam dan mencari inspirasi.",
+            scientist: "Anda adalah seorang ilmuwan dan peneliti. Jelaskan topik ilmiah dengan akurasi, objektivitas, dan menggunakan analogi yang mudah dipahami. Prioritaskan data dari sumber terpercaya melalui pencarian. Gunakan LaTeX untuk semua formula.",
+            academic: "Anda adalah seorang akademisi dan peneliti. Berikan penjelasan yang mendalam, terstruktur, dan berbasis bukti. Sertakan referensi jika memungkinkan dari hasil pencarian. Analisis topik dari berbagai sudut pandang dan jelaskan konsep-konsep yang rumit dengan presisi.",
+            historian: "Anda adalah seorang sejarawan dan pakar sejarah dunia. Berikan jawaban yang detail, kronologis, dan berbasis fakta dari sumber-sumber yang terverifikasi melalui pencarian. Jelaskan konteks historis dan hubungan sebab-akibat dari setiap peristiwa."
+        };
+
+        // --- SETUP & INITIALIZATION ---
 
         function setupDOM() {
-            // Main structure
-            dom.appContainer = document.getElementById('app-container');
-            dom.sidebar = document.getElementById('sidebar');
-            dom.sidebarToggle = document.getElementById('sidebar-toggle');
-            dom.sidebarClose = document.getElementById('sidebar-close');
-            dom.chatContainer = document.getElementById('chat-container');
-            dom.userInput = document.getElementById('user-input');
-            dom.sendButton = document.getElementById('send-button');
-            dom.micBtn = document.getElementById('mic-btn');
-            
-            // Sidebar
-            dom.newChatBtn = document.getElementById('new-chat-btn');
-            dom.conversationHistory = document.getElementById('conversation-history');
-            dom.fullscreenBtn = document.getElementById('fullscreen-btn');
-            dom.settingsButton = document.getElementById('settings-button');
-            dom.themeToggle = document.getElementById('theme-toggle');
-            dom.themeText = document.getElementById('theme-text');
-
-            // Input area
-            dom.imageUploadInput = document.getElementById('image-upload-input');
-            dom.imagePreviewContainer = document.getElementById('image-preview-container');
-            dom.stopGenerationContainer = document.getElementById('stop-generation-container');
-            dom.stopGenerationBtn = document.getElementById('stop-generation-btn');
-            
-            // Modals & Toasts
-            dom.modalBackdrop = document.getElementById('modal-backdrop');
-            dom.toastContainer = document.getElementById('toast-container');
+            const ids = ['app-container', 'sidebar', 'sidebar-toggle', 'sidebar-close', 'sidebar-overlay', 'chat-container', 'user-input', 'send-button', 'mic-btn', 'new-chat-btn', 'conversation-history', 'fullscreen-btn', 'api-key-button', 'api-key-status', 'settings-button', 'theme-toggle', 'theme-text', 'image-upload-input', 'image-preview-container', 'stop-generation-container', 'stop-generation-btn', 'modal-backdrop', 'toast-container', 'chat-title'];
+            ids.forEach(id => {
+                const camelCaseId = id.replace(/-(\w)/g, (_, c) => c.toUpperCase());
+                dom[camelCaseId] = document.getElementById(id);
+            });
         }
 
         function initState() {
-            state.apiKey = localStorage.getItem('chimera_apiKey') || '';
-            state.conversations = JSON.parse(localStorage.getItem('chimera_conversations') || '{}');
-            state.activeConversationId = localStorage.getItem('chimera_activeConversationId') || null;
-            state.currentTheme = localStorage.getItem('chimera_theme') || 'dark';
+            try {
+                state.apiKey = localStorage.getItem('chimera_apiKey') || null;
+                state.conversations = JSON.parse(localStorage.getItem('chimera_conversations') || '{}');
+                state.activeConversationId = localStorage.getItem('chimera_activeConversationId') || null;
+                state.currentTheme = localStorage.getItem('chimera_theme') || 'dark';
+                
+                const savedSettings = JSON.parse(localStorage.getItem('chimera_settings'));
+                state.settings = { persona: 'default', customSystemPrompt: '', ...savedSettings };
+            } catch (e) {
+                console.error("Failed to initialize state from localStorage:", e);
+                // Reset to defaults if localStorage is corrupt
+                state.apiKey = null; state.conversations = {}; state.activeConversationId = null; 
+                state.currentTheme = 'dark'; state.settings = { persona: 'default', customSystemPrompt: '' };
+            }
+            
             state.isGenerating = false;
             state.abortController = null;
-            state.uploadedImage = null; // Base64 string of the uploaded image
-            
-            state.settings = { persona: 'default', customSystemPrompt: '' };
-            const savedSettings = JSON.parse(localStorage.getItem('chimera_settings'));
-            if (savedSettings) state.settings = { ...state.settings, ...savedSettings };
+            state.uploadedImage = null;
 
             window.SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-            state.recognition = window.SpeechRecognition ? new SpeechRecognition() : null;
-            if (state.recognition) {
+            if (window.SpeechRecognition) {
+                state.recognition = new SpeechRecognition();
                 state.recognition.continuous = false;
                 state.recognition.lang = 'id-ID';
                 state.recognition.interimResults = false;
+            } else {
+                state.recognition = null;
+                if(dom.micBtn) dom.micBtn.style.display = 'none';
             }
         }
         
-        const personas = {
-            default: "Anda adalah Asisten AI bernama Chimera. Jawab dalam Bahasa Indonesia. Anda canggih, ramah, dan terhubung ke internet. Gunakan format markdown yang kaya (tabel, list, blok kode, dll). Anda bisa menganalisis gambar, membuat diagram (gunakan sintaks mermaid), dan menampilkan rumus matematika (gunakan sintaks LaTeX `$$...$$` untuk block atau `$...$` untuk inline).",
-            coder: "Anda adalah programmer ahli. Berikan jawaban yang jelas, efisien, dengan contoh kode. Jelaskan konsep kompleks secara sederhana. Gunakan pencarian untuk dokumentasi terbaru. Format kode dengan benar menggunakan markdown.",
-            writer: "Anda adalah penulis kreatif. Gunakan bahasa yang kaya, kiasan, dan imajinatif. Gunakan pencarian untuk inspirasi.",
-            scientist: "Anda adalah ilmuwan. Jelaskan topik ilmiah dengan akurat, objektif, dan analogi yang mudah dipahami. Prioritaskan data dari sumber terpercaya melalui pencarian."
-        };
-
-        // --- CORE APPLICATION LOGIC ---
         function init() {
             setupDOM();
             initState();
             lucide.createIcons();
             setupEventListeners();
             updateThemeUI();
+            updateApiKeyUI();
             loadConversations();
             
             if (!state.activeConversationId || !state.conversations[state.activeConversationId]) {
@@ -249,21 +235,23 @@
             } else {
                 renderConversation(state.activeConversationId);
             }
-
-            if (!state.apiKey) {
-                showSettingsModal();
-            }
             
-            mermaid.initialize({ startOnLoad: false, theme: state.currentTheme });
+            mermaid.initialize({ startOnLoad: false, theme: state.currentTheme, securityLevel: 'loose' });
+            
+            if (!state.apiKey) {
+                setTimeout(() => {
+                    showApiKeyModal();
+                    showToast('Selamat datang! Masukkan API Key Anda untuk memulai.', 'warning');
+                }, 1000);
+            }
         }
         
         // --- CONVERSATION MANAGEMENT ---
+
         function createNewConversation() {
             const newId = `chat_${Date.now()}`;
-            const newTitle = `Percakapan Baru`;
-            state.conversations[newId] = { id: newId, title: newTitle, history: [], date: new Date(), pinned: false };
+            state.conversations[newId] = { id: newId, title: 'Percakapan Baru', history: [], date: new Date() };
             setActiveConversation(newId);
-            saveAllData(); // Save new conversation
         }
 
         function setActiveConversation(id) {
@@ -271,83 +259,57 @@
             localStorage.setItem('chimera_activeConversationId', id);
             renderConversation(id);
             loadConversations();
-            if(window.innerWidth < 768) dom.sidebar.classList.add('-translate-x-full');
+            if(window.innerWidth < 768) closeSidebar();
         }
+
+        function saveAllData() {
+            try {
+                localStorage.setItem('chimera_apiKey', state.apiKey || '');
+                localStorage.setItem('chimera_conversations', JSON.stringify(state.conversations));
+                localStorage.setItem('chimera_activeConversationId', state.activeConversationId);
+                localStorage.setItem('chimera_settings', JSON.stringify(state.settings));
+            } catch (e) {
+                console.error("Failed to save data to localStorage:", e);
+                showToast('Gagal menyimpan data. Penyimpanan mungkin penuh.', 'error');
+            }
+        }
+
+        // --- UI RENDERING ---
 
         function renderConversation(id) {
             dom.chatContainer.innerHTML = '';
             const conversation = state.conversations[id];
-            if (!conversation) return;
+            if (!conversation) return createNewConversation();
+            
+            dom.chatTitle.textContent = conversation.title;
             
             if (conversation.history.length === 0) {
                  renderWelcomeScreen();
             } else {
-                conversation.history.forEach(msg => {
-                    if(msg.role === 'user') addMessage('user', msg.parts, false);
-                    else if (msg.role === 'model') addMessage('model', [{ text: msg.parts[0].text }], false);
-                });
+                conversation.history.forEach(msg => addMessage(msg.role, msg.parts, false));
             }
+            scrollToBottom(true);
         }
         
         function loadConversations() {
             dom.conversationHistory.innerHTML = '';
-            const sortedConversations = Object.values(state.conversations).sort((a, b) => {
-                const pinA = a.pinned || false;
-                const pinB = b.pinned || false;
-                if (pinA !== pinB) return pinB - pinA; // Pinned chats first
-                return new Date(b.date) - new Date(a.date); // Then sort by date
-            });
-            
+            const sortedConversations = Object.values(state.conversations).sort((a, b) => new Date(b.date) - new Date(a.date));
             sortedConversations.forEach(conv => {
                 const isActive = conv.id === state.activeConversationId;
-                const convElement = document.createElement('div');
-                convElement.className = `flex items-center justify-between p-2 rounded-lg cursor-pointer group transition-all duration-200 ${isActive ? 'bg-blue-600/30' : 'hover:bg-white/10'}`;
-                convElement.dataset.id = conv.id;
+                const el = document.createElement('div');
+                el.className = `flex items-center justify-between p-2 rounded-lg cursor-pointer group transition-all duration-200 ${isActive ? 'bg-blue-600/30' : 'hover:bg-white/10'}`;
+                el.dataset.id = conv.id;
+                el.innerHTML = `<span class="truncate flex-1 pr-2">${conv.title}</span><button class="delete-chat-btn opacity-0 group-hover:opacity-100 text-gray-400 hover:text-white transition-opacity p-1"><i data-lucide="trash-2" class="w-4 h-4"></i></button>`;
                 
-                const pinIcon = conv.pinned ? `<i data-lucide="pin" class="w-4 h-4 inline-block mr-2 text-blue-400 flex-shrink-0"></i>` : '';
-                
-                convElement.innerHTML = `
-                    <div class="flex items-center truncate flex-1">
-                        ${pinIcon}
-                        <span class="truncate">${conv.title}</span>
-                    </div>
-                    <div class="flex items-center opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
-                        <button class="pin-chat-btn p-1 text-gray-400 hover:text-white" title="${conv.pinned ? 'Lepas Sematan' : 'Sematkan'}">
-                            <i data-lucide="${conv.pinned ? 'pin-off' : 'pin'}" class="w-4 h-4"></i>
-                        </button>
-                        <button class="delete-chat-btn p-1 text-gray-400 hover:text-white" title="Hapus">
-                            <i data-lucide="trash-2" class="w-4 h-4"></i>
-                        </button>
-                    </div>
-                `;
-                
-                convElement.addEventListener('click', (e) => {
-                    const targetPin = e.target.closest('.pin-chat-btn');
-                    const targetDelete = e.target.closest('.delete-chat-btn');
-
-                    if (targetPin) {
-                        e.stopPropagation();
-                        conv.pinned = !conv.pinned;
-                        saveAllData();
-                        loadConversations();
-                        return;
-                    }
-                    if (targetDelete) {
+                el.addEventListener('click', (e) => {
+                    if (e.target.closest('.delete-chat-btn')) {
                         e.stopPropagation();
                         showCustomConfirm('Hapus percakapan?', `Anda yakin ingin menghapus "${conv.title}"? Aksi ini tidak dapat dibatalkan.`, () => {
-                            const wasActive = state.activeConversationId === conv.id;
                             delete state.conversations[conv.id];
-                            
-                            if (wasActive) {
-                                const remainingSorted = Object.values(state.conversations)
-                                    .sort((a, b) => new Date(b.date) - new Date(a.date));
-                                
-                                if (remainingSorted.length > 0) {
-                                    setActiveConversation(remainingSorted[0].id);
-                                } else {
-                                    createNewConversation(); // This will save and load
-                                    return;
-                                }
+                            if (state.activeConversationId === conv.id) {
+                                const nextId = Object.keys(state.conversations)[0] || null;
+                                if (nextId) setActiveConversation(nextId);
+                                else createNewConversation();
                             }
                             saveAllData();
                             loadConversations();
@@ -356,244 +318,201 @@
                     }
                     setActiveConversation(conv.id);
                 });
-
-                dom.conversationHistory.appendChild(convElement);
+                dom.conversationHistory.appendChild(el);
             });
             lucide.createIcons();
         }
-        
-        function saveAllData() {
-            localStorage.setItem('chimera_conversations', JSON.stringify(state.conversations));
-            localStorage.setItem('chimera_activeConversationId', state.activeConversationId);
-            localStorage.setItem('chimera_settings', JSON.stringify(state.settings));
-        }
 
-        // --- UI & DOM MANIPULATION ---
         function renderWelcomeScreen() {
-             const prompts = [
-                { icon: 'code', text: 'Buatkan saya fungsi python untuk validasi email' },
-                { icon: 'edit-3', text: 'Tulis email untuk bos saya tentang laporan mingguan' },
-                { icon: 'brain-circuit', text: 'Jelaskan konsep Neural Network secara sederhana' },
-                { icon: 'image', text: 'Berikan saya ide gambar untuk postingan media sosial' },
-             ];
-             dom.chatContainer.innerHTML = `
-                 <div class="flex flex-col items-center justify-center h-full text-center fade-in">
-                     <div class="max-w-2xl">
-                         <h1 class="text-4xl md:text-5xl font-bold tracking-tight">Project Chimera 2.2</h1>
-                         <p class="mt-4 text-gray-400">Asisten AI canggih Anda. Terhubung ke web, mampu menganalisis gambar, membuat diagram, dan banyak lagi. Bagaimana saya bisa membantu Anda hari ini?</p>
-                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-8">
-                            ${prompts.map(p => `
-                                <button class="prompt-starter-btn text-left p-4 border border-[var(--border-primary)] rounded-lg hover:bg-white/5 transition-colors">
-                                    <div class="flex items-center gap-3">
-                                        <i data-lucide="${p.icon}" class="w-5 h-5 text-gray-400"></i>
-                                        <span class="font-medium">${p.text}</span>
-                                    </div>
-                                </button>
-                            `).join('')}
-                         </div>
-                     </div>
-                 </div>`;
+            dom.chatContainer.innerHTML = `
+                <div class="flex flex-col items-center justify-center h-full text-center p-4 fade-in">
+                    <h1 class="text-4xl md:text-5xl font-bold tracking-tight">Project Chimera 7.0</h1>
+                    <p class="mt-4 text-gray-400 max-w-2xl mx-auto">Asisten AI canggih dengan pemahaman materi, input suara, dan TTS. Bagaimana saya bisa membantu Anda hari ini?</p>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-10 w-full max-w-2xl">
+                        <button data-prompt="Jelaskan konsep relativitas umum Einstein dengan analogi sederhana." class="welcome-prompt-btn">
+                            <i data-lucide="atom"></i> <strong>Rumus Fisika</strong> <p>Jelaskan relativitas umum</p>
+                        </button>
+                         <button data-prompt="Buatkan saya contoh kode python untuk web scraping menggunakan BeautifulSoup." class="welcome-prompt-btn">
+                            <i data-lucide="code"></i> <strong>Analisis Kode</strong> <p>Contoh web scraping Python</p>
+                        </button>
+                         <button data-prompt="Buatkan puisi tentang senja di tepi pantai." class="welcome-prompt-btn">
+                            <i data-lucide="feather"></i> <strong>Buat Puisi</strong> <p>Puisi tentang senja</p>
+                        </button>
+                         <button data-prompt="Rencanakan perjalanan 3 hari di Yogyakarta, fokus pada wisata budaya dan kuliner." class="welcome-prompt-btn">
+                            <i data-lucide="map"></i> <strong>Rencana Perjalanan</strong> <p>Itinerary 3 hari di Jogja</p>
+                        </button>
+                    </div>
+                </div>`;
+                
+            const style = document.createElement('style');
+            style.textContent = `
+                .welcome-prompt-btn {
+                    background-color: var(--surface-primary); border: 1px solid var(--border-primary);
+                    padding: 1rem; border-radius: 0.75rem; text-align: left;
+                    transition: all 0.2s ease-in-out;
+                }
+                .welcome-prompt-btn:hover {
+                    transform: translateY(-5px); border-color: var(--accent);
+                    box-shadow: 0 10px 15px -3px var(--accent-glow);
+                }
+                .welcome-prompt-btn i {
+                    margin-bottom: 0.5rem; color: var(--accent);
+                }
+                 .welcome-prompt-btn p { font-size: 0.875rem; color: #9ca3af; }
+            `;
+            dom.chatContainer.appendChild(style);
             lucide.createIcons();
-            document.querySelectorAll('.prompt-starter-btn').forEach(btn => {
-                btn.onclick = () => {
-                    dom.userInput.value = btn.querySelector('span').textContent;
-                    sendMessageToAI();
-                };
-            });
         }
 
         function addMessage(sender, parts, animate = true) {
             const isUser = sender === 'user';
-            const messageWrapper = document.createElement('div');
-            messageWrapper.className = `flex group ${isUser ? 'justify-end' : 'justify-start'}`;
-
-            const bubble = document.createElement('div');
-            bubble.className = `border p-4 rounded-xl max-w-3xl ${animate ? 'fade-in' : ''}`;
-            bubble.style.borderColor = 'var(--border-primary)';
+            const wrapper = document.createElement('div');
+            const animationClass = isUser ? 'slideInRight' : 'slideInLeft';
+            wrapper.style.animation = animate ? `${animationClass} 0.4s ease-out forwards` : 'none';
+            wrapper.className = `flex gap-3 ${isUser ? 'justify-end' : 'justify-start'}`;
             
+            let contentHTML = '';
             if (isUser) {
-                bubble.className += ' rounded-br-none bg-blue-600/10 text-[var(--text-primary)]';
-            } else {
-                bubble.className += ' rounded-bl-none bg-[var(--surface-primary)] text-[var(--text-primary)] relative';
-            }
-            
-            const markdownContainer = document.createElement('div');
-            markdownContainer.className = 'markdown-content';
-
-            if (isUser) {
-                 let contentHTML = '';
                  parts.forEach(part => {
                     if (part.text) contentHTML += `<p>${part.text.replace(/\n/g, '<br>')}</p>`;
                     if (part.inlineData) contentHTML += `<img src="data:${part.inlineData.mimeType};base64,${part.inlineData.data}" class="max-w-xs rounded-lg mt-2" alt="Uploaded content">`;
                  });
-                 markdownContainer.innerHTML = contentHTML;
             } else {
-                markdownContainer.innerHTML = parts[0].text;
+                contentHTML = marked.parse(parts[0]?.text || "");
             }
 
-            bubble.appendChild(markdownContainer);
-            
-            if (!isUser) {
-                const controls = document.createElement('div');
-                controls.className = 'absolute -bottom-4 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300';
-                controls.innerHTML = `
-                    <button class="copy-response-btn p-1.5 bg-[var(--surface-primary)] border border-[var(--border-primary)] rounded-md hover:bg-white/20" title="Salin"><i data-lucide="copy" class="w-4 h-4"></i></button>
-                    <button class="tts-btn p-1.5 bg-[var(--surface-primary)] border border-[var(--border-primary)] rounded-md hover:bg-white/20" title="Dengarkan"><i data-lucide="volume-2" class="w-4 h-4"></i></button>
-                `;
-                bubble.appendChild(controls);
-            }
-
-            messageWrapper.appendChild(bubble);
-            dom.chatContainer.appendChild(messageWrapper);
-            
-            if (!isUser && parts[0].text !== '<div class="thinking-indicator"></div>') {
+            wrapper.innerHTML = `
+                <div class="w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center border ${isUser ? 'bg-blue-500/20 border-blue-500/30 order-2' : 'bg-gray-500/20 border-gray-500/30 order-1'}"><i data-lucide="${isUser ? 'user' : 'bot'}" class="w-5 h-5"></i></div>
+                <div class="border p-4 rounded-xl max-w-3xl ${isUser ? 'rounded-br-none bg-blue-600/10 order-1' : 'rounded-bl-none bg-[var(--surface-primary)] order-2'} relative group">
+                    <div class="markdown-content prose dark:prose-invert prose-p:my-2 prose-headings:my-3">${contentHTML}</div>
+                    ${!isUser ? `<div class="absolute -bottom-4 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                        <button class="copy-response-btn p-1.5 bg-[var(--surface-primary)] border border-[var(--border-primary)] rounded-md hover:bg-white/20" title="Salin"><i data-lucide="copy" class="w-4 h-4"></i></button>
+                        <button class="tts-btn p-1.5 bg-[var(--surface-primary)] border border-[var(--border-primary)] rounded-md hover:bg-white/20" title="Dengarkan"><i data-lucide="volume-2" class="w-4 h-4"></i></button>
+                    </div>` : ''}
+                </div>
+            `;
+            dom.chatContainer.appendChild(wrapper);
+            const bubble = wrapper.querySelector('.group');
+            if (!isUser && parts[0]?.text && !parts[0].text.includes('typing-indicator')) {
                  postProcessMessage(bubble);
             }
-            
-            dom.chatContainer.scrollTop = dom.chatContainer.scrollHeight;
+            scrollToBottom();
             lucide.createIcons();
             return bubble;
         }
 
-        async function streamMessage(bubble, fullResponse) {
-            const contentDiv = bubble.querySelector('.markdown-content');
-            let displayedText = '';
-            let buffer = '';
-            const cursor = `<span class="typing-cursor"></span>`;
-            
-            const words = fullResponse.split(/(\s+|`|\*|_|=|\n)/);
-            for (const word of words) {
-                if (state.abortController && state.abortController.signal.aborted) break;
-                buffer += word;
-                // Update rendering more frequently for a smoother feel
-                if (buffer.length > 5 || word.includes('\n')) {
-                    displayedText += buffer;
-                    contentDiv.innerHTML = marked.parse(displayedText + cursor);
-                    buffer = '';
-                    dom.chatContainer.scrollTop = dom.chatContainer.scrollHeight;
-                }
-                await new Promise(resolve => setTimeout(resolve, 5)); // Faster delay
-            }
-            
-            displayedText += buffer;
-            contentDiv.innerHTML = marked.parse(displayedText); // Final render without cursor
-            postProcessMessage(bubble);
-        }
-        
         function postProcessMessage(bubble) {
             renderMathInElement(bubble);
             highlightCodeInElement(bubble);
             renderMermaidDiagrams(bubble);
+            addCopyToCodeBlocks(bubble);
         }
         
         function updateThemeUI() {
             document.documentElement.className = state.currentTheme;
-            const oldIcon = dom.themeToggle.querySelector('i') || dom.themeToggle.querySelector('svg');
-            if (oldIcon) oldIcon.remove();
-
-            const newIcon = document.createElement('i');
-            if (state.currentTheme === 'dark') {
-                dom.themeText.textContent = 'Mode Terang';
-                newIcon.setAttribute('data-lucide', 'sun');
-            } else {
-                dom.themeText.textContent = 'Mode Gelap';
-                newIcon.setAttribute('data-lucide', 'moon');
+            dom.themeText.textContent = state.currentTheme === 'dark' ? 'Mode Terang' : 'Mode Gelap';
+            
+            const iconContainer = dom.themeToggle;
+            const oldIcon = iconContainer.querySelector('i') || iconContainer.querySelector('svg');
+            if (oldIcon) {
+                oldIcon.remove();
             }
-            dom.themeToggle.insertBefore(newIcon, dom.themeText);
+            const newIcon = document.createElement('i');
+            newIcon.setAttribute('data-lucide', state.currentTheme === 'dark' ? 'sun' : 'moon');
+            iconContainer.prepend(newIcon);
+
             lucide.createIcons();
+
+            mermaid.initialize({ startOnLoad: false, theme: state.currentTheme, securityLevel: 'loose' });
+            document.querySelectorAll('.mermaid').forEach(el => {
+                el.removeAttribute('data-processed');
+                mermaid.run({ nodes: [el] });
+            });
         }
 
-        function autoResizeTextarea() {
-            const textarea = dom.userInput;
-            textarea.style.height = 'auto';
-            const maxHeight = 200; 
-            const newHeight = Math.min(textarea.scrollHeight, maxHeight);
-            textarea.style.height = `${newHeight}px`;
+        function updateApiKeyUI() {
+            dom.apiKeyStatus.className = `w-2.5 h-2.5 rounded-full transition-colors ${state.apiKey ? 'bg-green-500' : 'bg-red-500 api-status-pulse'}`;
         }
         
-        function showToast(message, type = 'success') {
-            const toast = document.createElement('div');
-            const colors = {
-                success: 'bg-green-600', error: 'bg-red-600', warning: 'bg-yellow-600'
-            };
-            toast.className = `flex items-center gap-3 ${colors[type]} text-white px-4 py-2 rounded-lg shadow-lg transform translate-y-4 opacity-0 transition-all duration-300`;
-            toast.innerHTML = `<i data-lucide="${type === 'success' ? 'check-circle' : 'alert-circle'}" class="w-5 h-5"></i><span>${message}</span>`;
-            
-            dom.toastContainer.appendChild(toast);
-            lucide.createIcons();
-            
-            setTimeout(() => {
-                toast.classList.remove('translate-y-4', 'opacity-0');
-            }, 10);
-            
-            setTimeout(() => {
-                toast.classList.add('opacity-0');
-                toast.addEventListener('transitionend', () => toast.remove());
-            }, 4000);
+        function updateUIForGeneration(isGenerating) {
+            dom.sendButton.disabled = isGenerating;
+            dom.stopGenerationContainer.classList.toggle('hidden', !isGenerating);
         }
 
-        // --- MODAL SYSTEM ---
-        function showModal(contentHTML) {
-            dom.modalBackdrop.innerHTML = `<div class="bg-[var(--surface-primary)] border border-[var(--border-primary)] w-full max-w-2xl rounded-2xl shadow-2xl fade-in flex flex-col max-h-[90vh]">
-                <div class="p-6 overflow-y-auto">${contentHTML}</div>
-            </div>`;
-            dom.modalBackdrop.classList.remove('hidden');
-            dom.modalBackdrop.classList.remove('opacity-0');
+        // --- MODALS & TOASTS ---
+
+        function showModal(contentHTML, size = 'max-w-md') {
+            dom.modalBackdrop.innerHTML = `<div class="bg-[var(--surface-primary)] border border-[var(--border-primary)] w-full ${size} rounded-2xl shadow-2xl scale-in flex flex-col max-h-[90vh]">${contentHTML}</div>`;
+            dom.modalBackdrop.classList.remove('opacity-0', 'pointer-events-none');
         }
 
         function hideModal() {
-            dom.modalBackdrop.classList.add('opacity-0');
-            dom.modalBackdrop.addEventListener('transitionend', () => {
-                dom.modalBackdrop.classList.add('hidden');
-                dom.modalBackdrop.innerHTML = '';
-            }, { once: true });
+            const modalContent = dom.modalBackdrop.querySelector('div[class*="max-w-"]');
+            if (modalContent) modalContent.classList.remove('scale-in');
+            dom.modalBackdrop.classList.add('opacity-0', 'pointer-events-none');
         }
         
-        function showSettingsModal() {
+        function showApiKeyModal() {
             const content = `
-                <h2 class="text-2xl font-bold mb-6">Pengaturan</h2>
-                <div class="space-y-6">
-                    <div>
-                        <label for="api-key-settings-input" class="block text-sm font-medium text-gray-400 mb-1">Google AI API Key</label>
-                        <input type="password" id="api-key-settings-input" placeholder="Masukkan API Key Anda" class="w-full p-2 border border-[var(--border-primary)] rounded-lg bg-[var(--bg-primary)] focus:outline-none focus:ring-1 focus:ring-blue-500" value="${state.apiKey}">
-                        <p class="text-xs text-gray-500 mt-1">Dapatkan kunci gratis dari <a href="https://aistudio.google.com/app/apikey" target="_blank" class="text-blue-400 underline hover:text-blue-300">Google AI Studio</a>.</p>
-                    </div>
-                    <div>
-                        <label for="persona-select" class="block text-sm font-medium text-gray-400 mb-1">Persona AI</label>
-                        <select id="persona-select" class="w-full p-2 border border-[var(--border-primary)] rounded-lg bg-[var(--bg-primary)] focus:outline-none focus:ring-1 focus:ring-blue-500">
-                            <option value="default">Asisten Standar</option>
-                            <option value="coder">Programmer Ahli</option>
-                            <option value="writer">Penulis Kreatif</option>
-                            <option value="scientist">Ilmuwan Penjelas</option>
-                            <option value="custom">Kustom</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label for="system-prompt-input" class="block text-sm font-medium text-gray-400 mb-1">System Prompt (Kustom)</label>
-                        <textarea id="system-prompt-input" rows="4" class="w-full p-2 border border-[var(--border-primary)] rounded-lg bg-[var(--bg-primary)] focus:outline-none focus:ring-1 focus:ring-blue-500" ${state.settings.persona !== 'custom' ? 'disabled' : ''}>${state.settings.customSystemPrompt}</textarea>
-                    </div>
-                    <div>
-                        <h3 class="text-lg font-semibold mb-2">Manajemen Data</h3>
-                        <div class="flex gap-2">
-                           <button id="export-chat-btn" class="w-full py-2 bg-gray-500/20 border border-gray-500 text-gray-300 rounded-lg hover:bg-gray-500/40 transition-colors">Ekspor Chat (JSON)</button>
-                           <button id="reset-all-settings-btn" class="w-full py-2 bg-red-600/20 border border-red-500 text-red-300 rounded-lg hover:bg-red-600/40 transition-colors">Reset Semua Pengaturan</button>
-                        </div>
-                    </div>
+                <div class="p-6">
+                    <h2 class="text-xl font-bold mb-2">Masukkan API Key</h2>
+                    <p class="text-sm text-gray-400 mb-4">Dapatkan API Key gratis Anda dari Google AI Studio untuk menggunakan aplikasi ini. Kode API hanya disimpan di browser Anda.</p>
+                    <input type="password" id="api-key-input" placeholder="AIza..." value="${state.apiKey || ''}" class="w-full p-2 border border-[var(--border-primary)] rounded-lg bg-[var(--bg-primary)] focus:outline-none focus:ring-1 focus:ring-blue-500">
                 </div>
-                <div class="flex justify-end mt-8 space-x-3 pt-6 border-t border-[var(--border-primary)]">
-                     <button id="close-settings-button" class="px-4 py-2 rounded-lg hover:bg-white/10 transition-colors">Tutup</button>
-                     <button id="save-settings-button" class="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 transition-colors font-semibold">Simpan</button>
+                <div class="flex justify-end gap-3 px-6 py-4 bg-black/20 rounded-b-2xl">
+                    <button id="close-modal-button" class="px-4 py-2 rounded-lg hover:bg-white/10">Batal</button>
+                    <button id="save-api-key-button" class="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 font-semibold">Simpan</button>
                 </div>
             `;
             showModal(content);
+        }
+
+        function showSettingsModal() {
+            const content = `
+                <div class="p-6 overflow-y-auto">
+                    <h2 class="text-2xl font-bold mb-6">Pengaturan</h2>
+                    <div class="space-y-6">
+                        <div>
+                            <label for="persona-select" class="block text-sm font-medium text-gray-400 mb-1">Persona AI</label>
+                            <select id="persona-select" class="w-full p-2 border border-[var(--border-primary)] rounded-lg bg-[var(--bg-primary)] focus:outline-none focus:ring-1 focus:ring-blue-500">
+                                <option value="default">Asisten Standar</option>
+                                <option value="coder">Programmer Ahli</option>
+                                <option value="writer">Penulis Kreatif</option>
+                                <option value="scientist">Ilmuwan</option>
+                                <option value="academic">Akademisi</option>
+                                <option value="historian">Pakar Sejarah</option>
+                                <option value="custom">Kustom</option>
+                            </select>
+                        </div>
+                        <div id="custom-prompt-container" class="${state.settings.persona !== 'custom' ? 'hidden' : ''}">
+                            <label for="system-prompt-input" class="block text-sm font-medium text-gray-400 mb-1">System Prompt (Kustom)</label>
+                            <textarea id="system-prompt-input" rows="4" class="w-full p-2 border border-[var(--border-primary)] rounded-lg bg-[var(--bg-primary)] focus:outline-none focus:ring-1 focus:ring-blue-500">${state.settings.customSystemPrompt}</textarea>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-semibold mb-2">Manajemen Data</h3>
+                            <div class="flex flex-col sm:flex-row gap-2">
+                               <button id="export-chat-btn" class="w-full py-2 bg-gray-500/20 border border-gray-500 text-gray-300 rounded-lg hover:bg-gray-500/40 transition-colors">Ekspor Semua Chat</button>
+                               <button id="reset-all-settings-btn" class="w-full py-2 bg-red-600/20 border border-red-500 text-red-300 rounded-lg hover:bg-red-600/40 transition-colors">Reset Semua Data</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex justify-end mt-auto space-x-3 p-4 border-t border-[var(--border-primary)] bg-black/10 rounded-b-2xl">
+                     <button id="close-settings-button" class="px-4 py-2 rounded-lg hover:bg-white/10 transition-colors">Tutup</button>
+                     <button id="save-settings-button" class="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 transition-colors font-semibold">Simpan & Tutup</button>
+                </div>
+            `;
+            showModal(content, 'max-w-2xl');
             document.getElementById('persona-select').value = state.settings.persona;
         }
-        
+
         function showCustomConfirm(title, message, onConfirm) {
             const content = `
-                <h2 class="text-xl font-bold mb-4">${title}</h2>
-                <p class="text-gray-400 mb-6">${message}</p>
-                <div class="flex justify-end gap-3">
+                <div class="p-6">
+                    <h2 class="text-xl font-bold mb-4">${title}</h2>
+                    <p class="text-gray-400 mb-6">${message}</p>
+                </div>
+                <div class="flex justify-end gap-3 px-6 py-4 bg-black/20 rounded-b-2xl">
                     <button id="confirm-cancel" class="px-4 py-2 rounded-lg hover:bg-white/10">Batal</button>
                     <button id="confirm-ok" class="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white">Konfirmasi</button>
                 </div>
@@ -603,294 +522,265 @@
             document.getElementById('confirm-cancel').onclick = hideModal;
         }
 
-        // --- UTILITIES ---
-        function highlightCodeInElement(element) {
-            element.querySelectorAll('pre code').forEach((block) => {
-                hljs.highlightElement(block);
-                const pre = block.parentElement;
-                if (pre.querySelector('.copy-code-btn')) return;
-                const copyBtn = document.createElement('button');
-                copyBtn.innerHTML = `<i data-lucide="copy" class="w-4 h-4"></i>`;
-                copyBtn.title = 'Salin kode';
-                copyBtn.className = 'copy-code-btn absolute top-2 right-2 p-1.5 bg-black/30 rounded-md hover:bg-black/50 transition-colors';
-                copyBtn.onclick = () => { navigator.clipboard.writeText(block.innerText); showToast('Kode disalin!'); };
-                pre.style.position = 'relative';
-                pre.appendChild(copyBtn);
-            });
+        function showToast(message, type = 'success') {
+            const toast = document.createElement('div');
+            const colors = { success: 'bg-green-600', error: 'bg-red-600', warning: 'bg-yellow-600' };
+            toast.className = `flex items-center gap-3 ${colors[type]} text-white px-4 py-2 rounded-lg shadow-lg toast-animation`;
+            toast.innerHTML = `<i data-lucide="${type === 'success' ? 'check-circle' : 'alert-circle'}" class="w-5 h-5"></i><span>${message}</span>`;
+            dom.toastContainer.appendChild(toast);
             lucide.createIcons();
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'transition-opacity', 'duration-300');
+                toast.addEventListener('transitionend', () => toast.remove());
+            }, 4000);
         }
 
-        function renderMathInElement(element) {
-            const mathElements = element.querySelectorAll('p, li, td, th');
-            mathElements.forEach(el => {
-                let text = el.innerHTML;
-                text = text.replace(/\$\$([\s\S]*?)\$\$/g, (match, formula) => {
-                    try { return katex.renderToString(formula.trim(), { displayMode: true, throwOnError: false }); }
-                    catch (e) { return `<span class="text-red-400">LaTeX Error</span>`; }
-                });
-                text = text.replace(/(?<!\\)\$([^\s][\s\S]*?[^\s])\$/g, (match, formula) => {
-                     try { return katex.renderToString(formula.trim(), { throwOnError: false }); }
-                     catch (e) { return `<span class="text-red-400">LaTeX Error</span>`; }
-                });
-                el.innerHTML = text;
-            });
-        }
-        
-        async function renderMermaidDiagrams(element) {
-            const diagrams = element.querySelectorAll('pre > code.language-mermaid');
-            for (const diagram of diagrams) {
-                const pre = diagram.parentElement;
-                const content = diagram.innerText;
-                try {
-                    const { svg } = await mermaid.render(`mermaid-${Date.now()}`, content);
-                    pre.innerHTML = svg;
-                } catch (error) {
-                    pre.innerHTML = `<p class="text-red-400">Mermaid Diagram Error: ${error.message}</p>`;
-                }
-            }
-        }
-        
-        function fileToBase64(file) {
-            return new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.readAsDataURL(file);
-                reader.onload = () => resolve(reader.result.split(',')[1]);
-                reader.onerror = error => reject(error);
-            });
-        }
-        
-        function toggleFullscreen() {
-            if (!document.fullscreenElement) {
-                dom.appContainer.requestFullscreen().catch(err => {
-                    showToast(`Gagal mode layar penuh: ${err.message}`, 'error');
-                });
-            } else {
-                if (document.exitFullscreen) {
-                    document.exitFullscreen();
-                }
-            }
-        }
-        
-        // --- CORE API LOGIC ---
+        // --- CORE FUNCTIONALITY & API ---
+
         async function sendMessageToAI() {
-            const userMessage = dom.userInput.value.trim();
-            if (!userMessage && !state.uploadedImage) return;
             if (!state.apiKey) {
-                showSettingsModal();
-                showToast("Harap masukkan API Key Anda terlebih dahulu.", "error");
+                showToast('Silakan masukkan API Key Anda terlebih dahulu.', 'warning');
+                showApiKeyModal();
                 return;
             }
+            let userMessage = dom.userInput.value.trim();
+            if (!userMessage && !state.uploadedImage) return;
 
-            state.isGenerating = true;
-            state.abortController = new AbortController();
-            updateUIForGeneration(true);
-            
-            if (state.conversations[state.activeConversationId]?.history.length === 0) {
-                 dom.chatContainer.innerHTML = ''; // Clear welcome message
+            if (state.uploadedImage && !userMessage) {
+                userMessage = "Jelaskan gambar ini secara detail.";
             }
+
+            state.isGenerating = true; state.abortController = new AbortController(); updateUIForGeneration(true);
+            if (state.conversations[state.activeConversationId]?.history.length === 0) dom.chatContainer.innerHTML = '';
 
             let userParts = [];
             if (userMessage) userParts.push({ text: userMessage });
-            if (state.uploadedImage) userParts.push({ inlineData: { mimeType: 'image/png', data: state.uploadedImage } });
+            if (state.uploadedImage) userParts.push({ inlineData: { mimeType: 'image/jpeg', data: state.uploadedImage } });
             
             addMessage('user', userParts);
             
             const currentConv = state.conversations[state.activeConversationId];
             currentConv.history.push({ role: 'user', parts: userParts });
-            
-            if (currentConv.history.length === 1 && userMessage) {
-                currentConv.title = userMessage.split(' ').slice(0, 5).join(' ');
-                loadConversations();
+            if (currentConv.history.length === 1 && userMessage) { 
+                currentConv.title = userMessage.split(' ').slice(0, 5).join(' '); 
+                dom.chatTitle.textContent = currentConv.title;
+                loadConversations(); 
             }
-            saveAllData();
             
-            dom.userInput.value = '';
-            state.uploadedImage = null;
-            dom.imagePreviewContainer.innerHTML = '';
-            autoResizeTextarea();
-
-            const modelBubble = addMessage('model', [{ text: '<div class="thinking-indicator"></div>' }]);
+            dom.userInput.value = ''; state.uploadedImage = null; dom.imagePreviewContainer.innerHTML = ''; autoResizeTextarea();
+            const loadingBubble = addMessage('model', [{ text: `<div class="typing-indicator"><span>.</span><span>.</span><span>.</span></div>` }]);
+            const markdownContainer = loadingBubble.querySelector('.markdown-content');
 
             try {
-                const systemPromptText = state.settings.persona === 'custom' ? state.settings.customSystemPrompt : personas[state.settings.persona];
-                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${state.apiKey}`;
+                const model = "gemini-2.5-flash-preview-05-20";
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:streamGenerateContent?alt=sse&key=${state.apiKey}`;
+                const systemPromptText = state.settings.persona === 'custom' ? state.settings.customSystemPrompt : (personas[state.settings.persona] || personas.default);
+                const payload = { contents: currentConv.history, systemInstruction: { parts: [{ text: systemPromptText }] }, tools: [{ "google_search": {} }] };
                 
-                const payload = {
-                    contents: currentConv.history,
-                    systemInstruction: { parts: [{ text: systemPromptText }] },
-                    tools: [{ "google_search": {} }],
-                };
+                const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload), signal: state.abortController.signal });
+                if (!response.ok) throw new Error(`API Error: ${response.status}. ${await response.text()}`);
 
-                const response = await fetch(apiUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload),
-                    signal: state.abortController.signal,
-                });
-
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    const readableError = errorData.error?.message || `API Error: ${response.status}. Periksa konsol untuk detail.`;
-                    throw new Error(readableError);
+                const reader = response.body.getReader(); const decoder = new TextDecoder();
+                let accumulatedResponse = ""; let firstChunk = true;
+                while (true) {
+                    const { value, done } = await reader.read();
+                    if (done) break;
+                    if (firstChunk) { markdownContainer.innerHTML = ''; firstChunk = false; }
+                    const lines = decoder.decode(value, {stream: true}).split('\n');
+                    for (const line of lines) {
+                        if (line.startsWith('data: ')) {
+                            try { accumulatedResponse += JSON.parse(line.substring(6)).candidates?.[0]?.content?.parts?.[0]?.text || ''; } catch (e) { /* Abaikan */ }
+                        }
+                    }
+                    markdownContainer.innerHTML = marked.parse(accumulatedResponse + '<span class="streaming-cursor"></span>');
+                    scrollToBottom();
                 }
-                
-                const result = await response.json();
-                const fullResponse = result.candidates?.[0]?.content?.parts?.[0]?.text || "Maaf, terjadi kesalahan atau tidak ada respons yang diterima.";
-
-                await streamMessage(modelBubble, fullResponse);
-                currentConv.history.push({ role: 'model', parts: [{ text: fullResponse }] });
+                markdownContainer.innerHTML = marked.parse(accumulatedResponse);
+                currentConv.history.push({ role: 'model', parts: [{ text: accumulatedResponse }] });
+                postProcessMessage(loadingBubble);
+                saveAllData();
 
             } catch (error) {
                 let errorMessage;
-                if (error.name === 'AbortError') {
-                    errorMessage = "*(Generasi dihentikan oleh pengguna)*";
+                if (error.name === 'AbortError') errorMessage = "*(Generasi dihentikan)*";
+                else if (error.message.includes("400") || error.message.includes("API key not valid")) {
+                    errorMessage = `**API Key Tidak Valid.**\n\nPastikan Anda telah memasukkan API Key yang benar. Dapatkan dari [Google AI Studio](https://aistudio.google.com/app/apikey).`;
+                    showToast('API Key tidak valid!', 'error');
                 } else {
-                    errorMessage = `**Terjadi Kesalahan:**\n\`\`\`\n${error.message}\n\`\`\`\n\nPastikan API Key Anda benar dan koneksi internet stabil.`;
-                    console.error("API Error:", error);
+                    errorMessage = `**Terjadi Kesalahan:**\n\`\`\`\n${error.message}\n\`\`\`\n`; console.error("API Error:", error);
                 }
-                modelBubble.querySelector('.markdown-content').innerHTML = marked.parse(errorMessage);
+                markdownContainer.innerHTML = marked.parse(errorMessage);
             } finally {
-                state.isGenerating = false;
-                updateUIForGeneration(false);
-                saveAllData();
+                state.isGenerating = false; updateUIForGeneration(false);
+            }
+        }
+        
+        async function playTextToSpeech(textToSpeak, buttonElement) {
+            if (!state.apiKey) return showApiKeyModal(showToast('API Key diperlukan untuk fitur TTS.', 'warning'));
+            if (state.currentPlayingAudio) {
+                state.currentPlayingAudio.pause();
+                state.currentPlayingAudio = null;
+                document.querySelectorAll('.tts-btn').forEach(btn => {
+                     btn.innerHTML = `<i data-lucide="volume-2" class="w-4 h-4"></i>`;
+                });
+                 lucide.createIcons();
+                if(buttonElement.dataset.playing === "true") {
+                    buttonElement.dataset.playing = "false";
+                    return;
+                }
+            }
+
+            buttonElement.innerHTML = `<i data-lucide="loader" class="w-4 h-4 animate-spin"></i>`;
+            buttonElement.dataset.playing = "true";
+            lucide.createIcons();
+
+            try {
+                const model = "gemini-2.5-flash-preview-tts";
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${state.apiKey}`;
+                const payload = { contents: [{ parts: [{ text: textToSpeak }] }], generationConfig: { responseModalities: ["AUDIO"] }};
+                const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                if (!response.ok) throw new Error(`TTS API Error: ${response.statusText}`);
+                const result = await response.json();
+                const audioDataB64 = result.candidates[0].content.parts[0].inlineData.data;
+                const pcmData = base64ToArrayBuffer(audioDataB64);
+                const pcm16 = new Int16Array(pcmData);
+                const wavBlob = pcmToWav(pcm16, 24000);
+                const audioUrl = URL.createObjectURL(wavBlob);
+                const audio = new Audio(audioUrl);
+                state.currentPlayingAudio = audio;
+                audio.play();
+                buttonElement.innerHTML = `<i data-lucide="stop-circle" class="w-4 h-4"></i>`;
+                lucide.createIcons();
+                audio.onended = () => {
+                    buttonElement.innerHTML = `<i data-lucide="volume-2" class="w-4 h-4"></i>`;
+                    lucide.createIcons();
+                    state.currentPlayingAudio = null;
+                     buttonElement.dataset.playing = "false";
+                };
+            } catch (error) {
+                console.error("TTS Error:", error);
+                showToast("Gagal memutar audio.", "error");
+                buttonElement.innerHTML = `<i data-lucide="volume-x" class="w-4 h-4"></i>`;
+                lucide.createIcons();
+                 buttonElement.dataset.playing = "false";
+            }
+        }
+        
+        // --- HELPERS & UTILITIES ---
+
+        function fileToBase64(file) { return new Promise((resolve, reject) => { const reader = new FileReader(); reader.onload = () => resolve(reader.result.split(',')[1]); reader.onerror = error => reject(error); reader.readAsDataURL(file); }); }
+        function toggleFullscreen() { if (!document.fullscreenElement) { dom.appContainer.requestFullscreen().catch(err => showToast(`Error: ${err.message}`, 'error')); dom.fullscreenBtn.innerHTML = `<i data-lucide="minimize"></i> Keluar Layar Penuh`; } else { document.exitFullscreen(); dom.fullscreenBtn.innerHTML = `<i data-lucide="maximize"></i> Layar Penuh`; } lucide.createIcons(); }
+        function autoResizeTextarea() { const ta = dom.userInput; ta.style.height = 'auto'; ta.style.height = `${Math.min(ta.scrollHeight, 200)}px`; }
+        function scrollToBottom(instant = false) { dom.chatContainer.scrollTo({ top: dom.chatContainer.scrollHeight, behavior: instant ? 'instant' : 'smooth' }); }
+        function openSidebar() { dom.sidebar.classList.remove('-translate-x-full'); dom.sidebarOverlay.classList.remove('hidden'); }
+        function closeSidebar() { dom.sidebar.classList.add('-translate-x-full'); dom.sidebarOverlay.classList.add('hidden'); }
+
+        function highlightCodeInElement(el) { el.querySelectorAll('pre code:not(.language-mermaid)').forEach(hljs.highlightElement); }
+        
+        function renderMathInElement(el) {
+            // FIXED: Explicitly call the KaTeX library function from the window object
+            if (window.renderMathInElement) {
+                window.renderMathInElement(el, {
+                    delimiters: [
+                        {left: '$$', right: '$$', display: true},
+                        {left: '$', right: '$', display: false},
+                        {left: '\\(', right: '\\)', display: false},
+                        {left: '\\[', right: '\\]', display: true}
+                    ],
+                    throwOnError: false
+                });
             }
         }
 
-        function updateUIForGeneration(isGenerating) {
-            dom.sendButton.disabled = isGenerating;
-            dom.stopGenerationContainer.classList.toggle('hidden', !isGenerating);
+        async function renderMermaidDiagrams(el) { const mermaidElements = el.querySelectorAll('pre code.language-mermaid'); for (const codeElement of mermaidElements) { const pre = codeElement.parentElement; const container = document.createElement('div'); container.className = 'mermaid my-4 p-4 flex justify-center items-center bg-white dark:bg-gray-800 rounded-lg'; container.textContent = codeElement.textContent; pre.replaceWith(container); try { await mermaid.run({ nodes: [container] }); } catch(e) { container.innerHTML = `<p class="text-red-400">Error rendering diagram: ${e.message}</p>`; } } }
+        
+        function addCopyToCodeBlocks(bubble) {
+            const codeBlocks = bubble.querySelectorAll('pre');
+            codeBlocks.forEach(block => {
+                if (block.querySelector('.language-mermaid')) return;
+                block.classList.add('group/pre');
+                const copyButton = document.createElement('button');
+                copyButton.className = 'absolute top-2 right-2 p-1.5 bg-gray-700/50 rounded-md text-gray-300 hover:text-white hover:bg-gray-600/70 transition-all opacity-0 group-hover/pre:opacity-100';
+                copyButton.title = 'Salin kode';
+                copyButton.innerHTML = '<i data-lucide="copy" class="w-4 h-4"></i>';
+                
+                block.appendChild(copyButton);
+
+                copyButton.addEventListener('click', () => {
+                    const code = block.querySelector('code').innerText;
+                    navigator.clipboard.writeText(code).then(() => {
+                        showToast('Kode disalin ke clipboard!');
+                        copyButton.innerHTML = '<i data-lucide="check" class="w-4 h-4 text-green-400"></i>';
+                        setTimeout(() => {
+                            copyButton.innerHTML = '<i data-lucide="copy" class="w-4 h-4"></i>';
+                            lucide.createIcons();
+                        }, 2000);
+                    }).catch(err => {
+                        showToast('Gagal menyalin kode.', 'error');
+                    });
+                    lucide.createIcons();
+                });
+            });
+            lucide.createIcons();
         }
 
+        function base64ToArrayBuffer(base64) { const binary_string = window.atob(base64); const len = binary_string.length; const bytes = new Uint8Array(len); for (let i = 0; i < len; i++) { bytes[i] = binary_string.charCodeAt(i); } return bytes.buffer; }
+        function pcmToWav(pcmData, sampleRate) { const numChannels = 1; const bitsPerSample = 16; const byteRate = sampleRate * numChannels * bitsPerSample / 8; const blockAlign = numChannels * bitsPerSample / 8; const dataSize = pcmData.length * pcmData.BYTES_PER_ELEMENT; const buffer = new ArrayBuffer(44 + dataSize); const view = new DataView(buffer); writeString(view, 0, 'RIFF'); view.setUint32(4, 36 + dataSize, true); writeString(view, 8, 'WAVE'); writeString(view, 12, 'fmt '); view.setUint32(16, 16, true); view.setUint16(20, 1, true); view.setUint16(22, numChannels, true); view.setUint32(24, sampleRate, true); view.setUint32(28, byteRate, true); view.setUint16(32, blockAlign, true); view.setUint16(34, bitsPerSample, true); writeString(view, 36, 'data'); view.setUint32(40, dataSize, true); const pcm16 = new Int16Array(buffer, 44); pcm16.set(pcmData); return new Blob([view], { type: 'audio/wav' }); }
+        function writeString(view, offset, string) { for (let i = 0; i < string.length; i++) { view.setUint8(offset + i, string.charCodeAt(i)); } }
+
+
         // --- EVENT LISTENERS ---
+
         function setupEventListeners() {
             dom.newChatBtn.addEventListener('click', createNewConversation);
             dom.sendButton.addEventListener('click', sendMessageToAI);
-            dom.userInput.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault();
-                    sendMessageToAI();
-                }
-            });
+            dom.userInput.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessageToAI(); } });
             dom.userInput.addEventListener('input', autoResizeTextarea);
-            dom.sidebarToggle.addEventListener('click', () => dom.sidebar.classList.remove('-translate-x-full'));
-            dom.sidebarClose.addEventListener('click', () => dom.sidebar.classList.add('-translate-x-full'));
-            dom.themeToggle.addEventListener('click', () => {
-                state.currentTheme = state.currentTheme === 'dark' ? 'light' : 'dark';
-                localStorage.setItem('chimera_theme', state.currentTheme);
-                mermaid.initialize({ startOnLoad: false, theme: state.currentTheme });
-                updateThemeUI();
-            });
-            dom.settingsButton.addEventListener('click', showSettingsModal);
+            dom.sidebarToggle.addEventListener('click', openSidebar);
+            dom.sidebarClose.addEventListener('click', closeSidebar);
+            dom.sidebarOverlay.addEventListener('click', closeSidebar);
             dom.fullscreenBtn.addEventListener('click', toggleFullscreen);
-
-            // Robust fullscreen change handler (e.g., for ESC key)
-            document.addEventListener('fullscreenchange', () => {
-                if (document.fullscreenElement) {
-                    dom.fullscreenBtn.innerHTML = `<i data-lucide="minimize"></i> Keluar Layar Penuh`;
-                } else {
-                    dom.fullscreenBtn.innerHTML = `<i data-lucide="maximize"></i> Layar Penuh`;
-                }
-                lucide.createIcons();
-            });
-
-            dom.imageUploadInput.addEventListener('change', async (e) => {
-                const file = e.target.files[0];
-                if (file) {
-                    state.uploadedImage = await fileToBase64(file);
-                    dom.imagePreviewContainer.innerHTML = `
-                        <div class="relative fade-in">
-                            <img src="${URL.createObjectURL(file)}" class="h-14 rounded-lg border border-[var(--border-primary)]">
-                            <button id="remove-image-btn" class="absolute -top-1 -right-1 bg-red-600 rounded-full text-white p-0.5"><i data-lucide="x" class="w-3 h-3"></i></button>
-                        </div>`;
-                    lucide.createIcons();
-                }
-            });
+            dom.apiKeyButton.addEventListener('click', showApiKeyModal);
+            dom.settingsButton.addEventListener('click', showSettingsModal);
+            dom.themeToggle.addEventListener('click', () => { state.currentTheme = state.currentTheme === 'dark' ? 'light' : 'dark'; localStorage.setItem('chimera_theme', state.currentTheme); updateThemeUI(); });
+            dom.stopGenerationBtn.addEventListener('click', () => { if (state.abortController) state.abortController.abort(); });
             
-            dom.stopGenerationBtn.addEventListener('click', () => {
-                if (state.abortController) state.abortController.abort();
-            });
+            dom.imageUploadInput.addEventListener('change', async (e) => { const file = e.target.files[0]; if (file) { state.uploadedImage = await fileToBase64(file); dom.imagePreviewContainer.innerHTML = ` <div class="relative inline-block"> <img src="${URL.createObjectURL(file)}" class="h-14 w-14 object-cover rounded-md"> <button id="remove-image-btn" class="absolute -top-1 -right-1 bg-red-500 text-white rounded-full p-0.5"><i data-lucide="x" class="w-3 h-3"></i></button> </div>`; lucide.createIcons(); } });
 
             if (state.recognition) {
-                dom.micBtn.addEventListener('click', () => {
-                    try {
-                        state.recognition.start();
-                        dom.micBtn.classList.add('text-red-500', 'animate-pulse');
-                    } catch (e) { showToast('Pengenalan suara sudah aktif.', 'error'); }
-                });
-                state.recognition.onresult = (event) => { dom.userInput.value += event.results[0][0].transcript; autoResizeTextarea(); };
-                state.recognition.onend = () => dom.micBtn.classList.remove('text-red-500', 'animate-pulse');
-                state.recognition.onerror = (event) => showToast(`Error pengenalan suara: ${event.error}`, 'error');
-            } else {
-                dom.micBtn.disabled = true;
-                dom.micBtn.title = "Pengenalan suara tidak didukung di browser ini.";
+                dom.micBtn.addEventListener('click', () => { dom.micBtn.classList.add('mic-listening'); state.recognition.start(); });
+                state.recognition.onresult = (event) => { const transcript = event.results[0][0].transcript; dom.userInput.value = transcript; autoResizeTextarea(); };
+                state.recognition.onerror = (event) => { showToast(`Error pengenalan suara: ${event.error}`, 'error'); };
+                state.recognition.onend = () => { dom.micBtn.classList.remove('mic-listening'); };
             }
 
-            // Delegated event listeners for dynamic content
             document.body.addEventListener('click', (e) => {
-                const modalContent = e.target.closest('.w-full.max-w-2xl');
-                if (!modalContent && !e.target.closest('#settings-button')) hideModal();
-                if (e.target.id === 'close-settings-button') hideModal();
-                if (e.target.id === 'save-settings-button') {
-                    state.apiKey = document.getElementById('api-key-settings-input').value.trim();
-                    state.settings.persona = document.getElementById('persona-select').value;
-                    state.settings.customSystemPrompt = document.getElementById('system-prompt-input').value;
-                    localStorage.setItem('chimera_apiKey', state.apiKey);
-                    saveAllData();
-                    hideModal();
-                    showToast('Pengaturan disimpan!');
-                }
-                 if (e.target.closest('#persona-select')) {
-                    const select = e.target.closest('#persona-select');
-                    document.getElementById('system-prompt-input').disabled = select.value !== 'custom';
-                }
-                if (e.target.id === 'reset-all-settings-btn') {
-                    showCustomConfirm('Reset Semua Pengaturan?', 'Aksi ini akan menghapus semua riwayat percakapan, API Key, dan pengaturan lainnya. Lanjutkan?', () => {
-                        localStorage.clear();
-                        initState();
-                        hideModal();
-                        showSettingsModal();
-                        createNewConversation(); // Creates, saves, and loads
-                        showToast('Semua data telah direset.', 'warning');
-                    });
-                }
-                if (e.target.id === 'export-chat-btn') {
-                    const data = JSON.stringify(state.conversations[state.activeConversationId], null, 2);
-                    const blob = new Blob([data], {type: 'application/json'});
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = `chimera-chat-${state.activeConversationId}.json`;
-                    a.click();
-                    URL.revokeObjectURL(url);
-                    showToast('Percakapan diekspor!');
-                }
+                if (!e.target.closest('div[class*="max-w-"]') && !e.target.closest('#api-key-button') && !e.target.closest('#settings-button')) hideModal();
+                if (e.target.id === 'close-modal-button' || e.target.id === 'close-settings-button') hideModal();
+                
+                if (e.target.id === 'save-api-key-button') { const newKey = document.getElementById('api-key-input').value.trim(); if(newKey) { state.apiKey = newKey; saveAllData(); updateApiKeyUI(); hideModal(); showToast('API Key berhasil disimpan!'); } else { showToast('API Key tidak boleh kosong.', 'error'); } }
+                if (e.target.id === 'save-settings-button') { state.settings.persona = document.getElementById('persona-select').value; state.settings.customSystemPrompt = document.getElementById('system-prompt-input').value; saveAllData(); hideModal(); showToast('Pengaturan disimpan!'); }
+                if (e.target.closest('#persona-select')) { document.getElementById('custom-prompt-container').classList.toggle('hidden', e.target.value !== 'custom'); }
 
-                if (e.target.closest('#remove-image-btn')) {
-                    state.uploadedImage = null;
-                    dom.imageUploadInput.value = '';
-                    dom.imagePreviewContainer.innerHTML = '';
-                }
-
+                if (e.target.id === 'reset-all-settings-btn') { showCustomConfirm('Reset Semua Data?', 'Ini akan menghapus semua riwayat percakapan dan pengaturan, termasuk API Key Anda. Aksi ini tidak bisa dibatalkan.', () => { localStorage.clear(); initState(); updateApiKeyUI(); loadConversations(); createNewConversation(); showToast('Semua data telah direset.', 'warning'); }); }
+                if (e.target.id === 'export-chat-btn') { const data = JSON.stringify(state.conversations, null, 2); const blob = new Blob([data], {type: 'application/json'}); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = `chimera-v7-all-chats.json`; a.click(); URL.revokeObjectURL(url); showToast('Semua percakapan diekspor!'); }
+                
                 const copyBtn = e.target.closest('.copy-response-btn');
-                if (copyBtn) {
-                    const textToCopy = copyBtn.closest('.fade-in').querySelector('.markdown-content').innerText;
-                    navigator.clipboard.writeText(textToCopy);
-                    showToast('Respons disalin!');
-                }
+                if (copyBtn) { const text = copyBtn.closest('.group').querySelector('.markdown-content').innerText; navigator.clipboard.writeText(text).then(() => showToast('Respons disalin!')).catch(() => showToast('Gagal menyalin', 'error')); }
+                
                 const ttsBtn = e.target.closest('.tts-btn');
-                if (ttsBtn) {
-                    speechSynthesis.cancel();
-                    const textToSpeak = ttsBtn.closest('.fade-in').querySelector('.markdown-content').innerText;
-                    const utterance = new SpeechSynthesisUtterance(textToSpeak);
-                    utterance.lang = 'id-ID';
-                    speechSynthesis.speak(utterance);
-                }
+                if (ttsBtn) { const text = ttsBtn.closest('.group').querySelector('.markdown-content').innerText; playTextToSpeech(text, ttsBtn); }
+                
+                const welcomeBtn = e.target.closest('.welcome-prompt-btn');
+                if(welcomeBtn) { dom.userInput.value = welcomeBtn.dataset.prompt; sendMessageToAI(); }
+
+                if (e.target.closest('#remove-image-btn')) { state.uploadedImage = null; dom.imagePreviewContainer.innerHTML = ''; dom.imageUploadInput.value = ''; }
             });
         }
-
-        // --- Let's Go! ---
+        
         init();
     });
     </script>
 </body>
 </html>
+
