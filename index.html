@@ -14,12 +14,16 @@
     <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.3/html2pdf.bundle.min.js"></script>
 
     <!-- Font dan Ikon -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Orbitron:wght@500;700&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@0.378.0/dist/umd/lucide.min.js"></script>
+    <!-- DOMPurify for sanitizing rendered HTML and ACE editor for Canva editor -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/2.4.0/purify.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.11.2/ace.min.js"></script>
 
     <style>
         :root {
@@ -42,10 +46,18 @@
             --bg-primary: var(--bg-light); --surface-primary: var(--surface-light);
             --text-primary: var(--text-light); --border-primary: var(--border-light);
         }
+        html.sunset {
+            color-scheme: light;
+            --bg-primary: #fff7ed; /* soft warm */
+            --surface-primary: #fff1e6;
+            --text-primary: #3b2f2f;
+            --border-primary: #f1c5a3;
+            --accent: #fb923c; --accent-hover: #f97316; --accent-glow: rgba(251,146,60,0.25);
+        }
         body {
             font-family: var(--font-body); background-color: var(--bg-primary);
             color: var(--text-primary); transition: background-color 0.5s, color 0.5s;
-            overflow: hidden;
+            overflow: auto;
         }
         h1, h2, h3 { font-family: var(--font-header); }
         ::-webkit-scrollbar { width: 8px; }
@@ -78,6 +90,10 @@
              background: linear-gradient(90deg, var(--bg-light), #e2e8f0, var(--bg-light));
              background-size: 200% 200%;
         }
+        html.sunset .animated-bg {
+            background: linear-gradient(90deg, #ff9a8b, #ff6a88, #b06ab3);
+            background-size: 200% 200%;
+        }
 
         .markdown-content table { width: 100%; border-collapse: collapse; margin: 1em 0; }
         .markdown-content th, .markdown-content td { border: 1px solid var(--border-primary); padding: 0.75rem; }
@@ -103,19 +119,38 @@
         <aside id="sidebar" class="bg-black/30 h-full flex flex-col w-72 p-4 transition-transform duration-300 ease-in-out fixed inset-y-0 left-0 -translate-x-full md:relative md:translate-x-0 z-40">
             <div class="flex items-center justify-between mb-4">
                  <h2 class="text-xl font-bold tracking-wider">CHIMERA v7</h2>
+              <div class="flex items-center gap-2">
+                 <button id="multi-select-toggle" class="px-2 py-1 rounded-md bg-transparent hover:bg-white/10 text-sm">Select</button>
                  <button id="sidebar-close" class="md:hidden p-1 rounded-full hover:bg-white/10 transition-colors"><i data-lucide="x"></i></button>
+              </div>
             </div>
             <button id="new-chat-btn" class="flex items-center justify-center gap-2 w-full p-2.5 rounded-lg bg-[var(--accent)] text-white font-semibold hover:bg-[var(--accent-hover)] transition-all duration-200 transform hover:scale-105 active:scale-100">
                 <i data-lucide="plus"></i> Obrolan Baru
             </button>
+            <div id="bulk-action-bar" class="mt-3 hidden items-center gap-2">
+                <button id="bulk-delete-btn" class="px-2 py-1 rounded-md bg-red-600 text-white">Hapus</button>
+                <button id="bulk-export-btn" class="px-2 py-1 rounded-md bg-gray-600 text-white">Ekspor</button>
+                <button id="bulk-pin-btn" class="px-2 py-1 rounded-md bg-yellow-500 text-black">Pin/Unpin</button>
+                <button id="bulk-cancel-btn" class="px-2 py-1 rounded-md bg-transparent border border-[var(--border-primary)]">Batal</button>
+            </div>
             <div id="conversation-history" class="mt-4 flex-1 overflow-y-auto pr-2 space-y-2"></div>
             <div class="pt-4 border-t border-[var(--border-primary)] space-y-1">
+                <div class="mb-2">
+                    <input id="search-input" placeholder="Cari percakapan..." class="w-full p-2 rounded-md bg-transparent border border-[var(--border-primary)] focus:outline-none" />
+                </div>
                 <button id="fullscreen-btn" class="flex items-center gap-3 w-full p-2 rounded-lg hover:bg-white/10 transition-colors"><i data-lucide="maximize"></i> Layar Penuh</button>
                 <button id="api-key-button" class="flex items-center justify-between w-full p-2 rounded-lg hover:bg-white/10 transition-colors">
                     <span class="flex items-center gap-3"><i data-lucide="key-round"></i> API Key</span>
                     <span id="api-key-status" class="w-2.5 h-2.5 rounded-full transition-colors"></span>
                 </button>
                 <button id="settings-button" class="flex items-center gap-3 w-full p-2 rounded-lg hover:bg-white/10 transition-colors"><i data-lucide="settings"></i> Pengaturan</button>
+                <!-- New tools -->
+                <div class="mt-3 space-y-2">
+                    <h3 class="text-sm text-gray-400">Alat Tambahan</h3>
+                    <button id="deep-research-btn" class="flex items-center gap-3 w-full p-2 rounded-lg hover:bg-white/10 transition-colors"><i data-lucide="search"></i> Deep Research</button>
+                    <button id="learning-btn" class="flex items-center gap-3 w-full p-2 rounded-lg hover:bg-white/10 transition-colors"><i data-lucide="book-open"></i> Pembelajaran Terpadu</button>
+                    <button id="canva-btn" class="flex items-center gap-3 w-full p-2 rounded-lg hover:bg-white/10 transition-colors"><i data-lucide="edit-3"></i> Canva (Editor & Preview)</button>
+                </div>
                 <button id="theme-toggle" class="flex items-center gap-3 w-full p-2 rounded-lg hover:bg-white/10 transition-colors"><i data-lucide="sun"></i> <span id="theme-text">Mode Terang</span></button>
             </div>
         </aside>
@@ -123,6 +158,9 @@
         <main class="flex-1 flex flex-col h-full relative overflow-hidden">
              <header class="flex items-center justify-between p-4 glass-effect m-2 md:m-4 mb-0 rounded-t-2xl rounded-b-none border-b border-[var(--border-primary)] shrink-0">
                 <h1 id="chat-title" class="text-lg font-semibold truncate pr-4">Percakapan Baru</h1>
+                <div class="flex items-center gap-2">
+                    <button id="export-single-chat-btn" class="px-3 py-1 rounded-md hover:bg-white/10">Ekspor Chat</button>
+                </div>
                 <button id="sidebar-toggle" class="p-2 rounded-md hover:bg-white/20 transition-all md:hidden"><i data-lucide="menu"></i></button>
              </header>
             <div class="flex-1 flex flex-col glass-effect m-2 md:m-4 mt-0 rounded-b-2xl overflow-hidden shadow-2xl">
@@ -182,7 +220,7 @@
         // --- SETUP & INITIALIZATION ---
 
         function setupDOM() {
-            const ids = ['app-container', 'sidebar', 'sidebar-toggle', 'sidebar-close', 'sidebar-overlay', 'chat-container', 'user-input', 'send-button', 'mic-btn', 'new-chat-btn', 'conversation-history', 'fullscreen-btn', 'api-key-button', 'api-key-status', 'settings-button', 'theme-toggle', 'theme-text', 'image-upload-input', 'image-preview-container', 'stop-generation-container', 'stop-generation-btn', 'modal-backdrop', 'toast-container', 'chat-title'];
+            const ids = ['app-container', 'sidebar', 'sidebar-toggle', 'sidebar-close', 'sidebar-overlay', 'chat-container', 'user-input', 'send-button', 'mic-btn', 'new-chat-btn', 'conversation-history', 'fullscreen-btn', 'api-key-button', 'api-key-status', 'settings-button', 'theme-toggle', 'theme-text', 'image-upload-input', 'image-preview-container', 'stop-generation-container', 'stop-generation-btn', 'modal-backdrop', 'toast-container', 'chat-title', 'search-input', 'deep-research-btn', 'learning-btn', 'canva-btn'];
             ids.forEach(id => {
                 const camelCaseId = id.replace(/-(\w)/g, (_, c) => c.toUpperCase());
                 dom[camelCaseId] = document.getElementById(id);
@@ -208,6 +246,8 @@
             state.isGenerating = false;
             state.abortController = null;
             state.uploadedImage = null;
+            state.multiSelectActive = false;
+            state.selectedConversations = {};
 
             window.SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
             if (window.SpeechRecognition) {
@@ -280,28 +320,44 @@
             dom.chatContainer.innerHTML = '';
             const conversation = state.conversations[id];
             if (!conversation) return createNewConversation();
-            
+
             dom.chatTitle.textContent = conversation.title;
-            
+
             if (conversation.history.length === 0) {
                  renderWelcomeScreen();
             } else {
-                conversation.history.forEach(msg => addMessage(msg.role, msg.parts, false));
+                conversation.history.forEach((msg, idx) => addMessage(msg.role, msg.parts, false, idx));
             }
+            // restore draft if present
+            dom.userInput.value = loadDraft(id) || '';
+            autoResizeTextarea();
             scrollToBottom(true);
         }
         
         function loadConversations() {
             dom.conversationHistory.innerHTML = '';
-            const sortedConversations = Object.values(state.conversations).sort((a, b) => new Date(b.date) - new Date(a.date));
+            const filter = dom.searchInput?.value?.toLowerCase?.() || '';
+            const sortedConversations = Object.values(state.conversations).filter(c => {
+                if (!filter) return true;
+                return c.title.toLowerCase().includes(filter) || (c.history||[]).some(m=> (m.parts||[]).some(p=> (p.text||'').toLowerCase().includes(filter)));
+            }).sort((a, b) => {
+                // pinned first, then date
+                if ((b.pinned?1:0) - (a.pinned?1:0) !== 0) return (b.pinned?1:0) - (a.pinned?1:0);
+                return new Date(b.date) - new Date(a.date);
+            });
             sortedConversations.forEach(conv => {
                 const isActive = conv.id === state.activeConversationId;
                 const el = document.createElement('div');
                 el.className = `flex items-center justify-between p-2 rounded-lg cursor-pointer group transition-all duration-200 ${isActive ? 'bg-blue-600/30' : 'hover:bg-white/10'}`;
                 el.dataset.id = conv.id;
-                el.innerHTML = `<span class="truncate flex-1 pr-2">${conv.title}</span><button class="delete-chat-btn opacity-0 group-hover:opacity-100 text-gray-400 hover:text-white transition-opacity p-1"><i data-lucide="trash-2" class="w-4 h-4"></i></button>`;
+                const checked = state.selectedConversations[conv.id] ? 'checked' : '';
+                const checkboxHTML = state.multiSelectActive ? `<input type="checkbox" class="conv-select-checkbox mr-2" data-id="${conv.id}" ${checked}/>` : '';
+                el.innerHTML = `<div class="flex items-center gap-2">${checkboxHTML}<button class="pin-chat-btn p-1 text-gray-400 hover:text-white" title="Pin percakapan">${conv.pinned?'<i data-lucide="pin" class="w-4 h-4 text-yellow-300"></i>':'<i data-lucide="circle" class="w-3 h-3"></i>'}</button><span class="truncate flex-1 pr-2">${conv.title}</span></div><div class="flex gap-1 items-center"><button class="delete-chat-btn opacity-0 group-hover:opacity-100 text-gray-400 hover:text-white transition-opacity p-1"><i data-lucide="trash-2" class="w-4 h-4"></i></button></div>`;
                 
                 el.addEventListener('click', (e) => {
+                    if (state.multiSelectActive && e.target.closest('.conv-select-checkbox')) {
+                        return; // checkbox handled separately
+                    }
                     if (e.target.closest('.delete-chat-btn')) {
                         e.stopPropagation();
                         showCustomConfirm('Hapus percakapan?', `Anda yakin ingin menghapus "${conv.title}"? Aksi ini tidak dapat dibatalkan.`, () => {
@@ -316,7 +372,8 @@
                         });
                         return;
                     }
-                    setActiveConversation(conv.id);
+                    if (e.target.closest('.pin-chat-btn')) { e.stopPropagation(); togglePinConversation(conv.id); return; }
+                    if (!state.multiSelectActive) setActiveConversation(conv.id);
                 });
                 dom.conversationHistory.appendChild(el);
             });
@@ -364,7 +421,7 @@
             lucide.createIcons();
         }
 
-        function addMessage(sender, parts, animate = true) {
+        function addMessage(sender, parts, animate = true, index = null) {
             const isUser = sender === 'user';
             const wrapper = document.createElement('div');
             const animationClass = isUser ? 'slideInRight' : 'slideInLeft';
@@ -384,10 +441,16 @@
             wrapper.innerHTML = `
                 <div class="w-8 h-8 rounded-full flex-shrink-0 flex items-center justify-center border ${isUser ? 'bg-blue-500/20 border-blue-500/30 order-2' : 'bg-gray-500/20 border-gray-500/30 order-1'}"><i data-lucide="${isUser ? 'user' : 'bot'}" class="w-5 h-5"></i></div>
                 <div class="border p-4 rounded-xl max-w-3xl ${isUser ? 'rounded-br-none bg-blue-600/10 order-1' : 'rounded-bl-none bg-[var(--surface-primary)] order-2'} relative group">
-                    <div class="markdown-content prose dark:prose-invert prose-p:my-2 prose-headings:my-3">${contentHTML}</div>
-                    ${!isUser ? `<div class="absolute -bottom-4 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                    <div class="flex items-start justify-between gap-2">
+                        <div class="markdown-content prose dark:prose-invert prose-p:my-2 prose-headings:my-3">${contentHTML}</div>
+                        <div class="text-xs text-gray-400 ml-2">${new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</div>
+                    </div>
+                    ${!isUser ? `<div class="absolute -bottom-5 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                         <button class="copy-response-btn p-1.5 bg-[var(--surface-primary)] border border-[var(--border-primary)] rounded-md hover:bg-white/20" title="Salin"><i data-lucide="copy" class="w-4 h-4"></i></button>
                         <button class="tts-btn p-1.5 bg-[var(--surface-primary)] border border-[var(--border-primary)] rounded-md hover:bg-white/20" title="Dengarkan"><i data-lucide="volume-2" class="w-4 h-4"></i></button>
+                        <button class="edit-message-btn p-1.5 bg-[var(--surface-primary)] border border-[var(--border-primary)] rounded-md hover:bg-white/20" data-index="${index}" title="Edit"><i data-lucide="edit-2" class="w-4 h-4"></i></button>
+                        <button class="history-message-btn p-1.5 bg-[var(--surface-primary)] border border-[var(--border-primary)] rounded-md hover:bg-white/20" data-index="${index}" title="Riwayat"><i data-lucide="clock" class="w-4 h-4"></i></button>
+                        <button class="delete-message-btn p-1.5 bg-[var(--surface-primary)] border border-[var(--border-primary)] rounded-md hover:bg-white/20" data-index="${index}" title="Hapus"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
                     </div>` : ''}
                 </div>
             `;
@@ -406,19 +469,30 @@
             highlightCodeInElement(bubble);
             renderMermaidDiagrams(bubble);
             addCopyToCodeBlocks(bubble);
+            // sanitize HTML to prevent XSS (marked output)
+            if (window.DOMPurify) {
+                const md = bubble.querySelector('.markdown-content');
+                if (md) {
+                    // use default DOMPurify sanitize (no invalid config)
+                    md.innerHTML = DOMPurify.sanitize(md.innerHTML);
+                }
+            }
         }
         
         function updateThemeUI() {
+            // apply theme class to <html>
             document.documentElement.className = state.currentTheme;
-            dom.themeText.textContent = state.currentTheme === 'dark' ? 'Mode Terang' : 'Mode Gelap';
-            
+
+            // readable label and icon mapping
+            const themeLabels = { dark: 'Mode Gelap', light: 'Mode Terang', sunset: 'Sunset' };
+            const themeIcons = { dark: 'sun', light: 'moon', sunset: 'sunset' };
+            dom.themeText.textContent = themeLabels[state.currentTheme] || 'Tema';
+
             const iconContainer = dom.themeToggle;
             const oldIcon = iconContainer.querySelector('i') || iconContainer.querySelector('svg');
-            if (oldIcon) {
-                oldIcon.remove();
-            }
+            if (oldIcon) oldIcon.remove();
             const newIcon = document.createElement('i');
-            newIcon.setAttribute('data-lucide', state.currentTheme === 'dark' ? 'sun' : 'moon');
+            newIcon.setAttribute('data-lucide', themeIcons[state.currentTheme] || 'sun');
             iconContainer.prepend(newIcon);
 
             lucide.createIcons();
@@ -430,8 +504,39 @@
             });
         }
 
+        // show lightweight onboarding modal once
+        function maybeShowOnboarding(){
+            try{
+                const seen = localStorage.getItem('chimera_seen_onboarding');
+                if (seen) return;
+                const content = `
+                    <div class="p-6">
+                        <h2 class="text-xl font-bold mb-2">Selamat datang di Chimera v7</h2>
+                        <p class="text-sm text-gray-400 mb-4">Beberapa fitur baru: export PDF, multi-select, dan tema 'Sunset'. Gunakan tombol tema untuk mengganti tampilan.</p>
+                        <div class="flex gap-2">
+                            <button id="onboard-gotit" class="px-3 py-2 rounded-md bg-blue-600 text-white">Mengerti</button>
+                            <button id="onboard-dismiss" class="px-3 py-2 rounded-md bg-transparent border border-[var(--border-primary)]">Jangan tampil lagi</button>
+                        </div>
+                    </div>
+                `;
+                showModal(content, 'max-w-md');
+                document.getElementById('onboard-gotit').addEventListener('click', () => { hideModal(); localStorage.setItem('chimera_seen_onboarding', '1'); });
+                document.getElementById('onboard-dismiss').addEventListener('click', () => { hideModal(); localStorage.setItem('chimera_seen_onboarding', '1'); });
+            }catch(e){ /* ignore */ }
+        }
+
         function updateApiKeyUI() {
-            dom.apiKeyStatus.className = `w-2.5 h-2.5 rounded-full transition-colors ${state.apiKey ? 'bg-green-500' : 'bg-red-500 api-status-pulse'}`;
+            let cls = 'bg-red-500 api-status-pulse';
+            if (state.apiKey) {
+                // detect if value looks like our encrypted payload (base64 JSON)
+                try {
+                    const decoded = atob(state.apiKey);
+                    const parsed = JSON.parse(decoded);
+                    if (parsed && parsed.salt && parsed.iv && parsed.ct) cls = 'bg-yellow-400';
+                    else cls = 'bg-green-500';
+                } catch(e) { cls = 'bg-green-500'; }
+            }
+            dom.apiKeyStatus.className = `w-2.5 h-2.5 rounded-full transition-colors ${cls}`;
         }
         
         function updateUIForGeneration(isGenerating) {
@@ -453,11 +558,24 @@
         }
         
         function showApiKeyModal() {
+            let extra = '';
+            // if stored key looks encrypted, offer unlock
+            try {
+                const decoded = state.apiKey ? atob(state.apiKey) : null;
+                const parsed = decoded ? JSON.parse(decoded) : null;
+                if (parsed && parsed.salt && parsed.iv && parsed.ct) {
+                    extra = `<div class="mb-3 text-sm text-yellow-300">API Key saat ini tersimpan dalam bentuk terenkripsi. Klik "Buka" untuk memasukkan password dan mendekripsi ke sesi ini.</div><div class="flex gap-2"><button id="unlock-api-key-btn" class="px-3 py-1 rounded-md bg-yellow-500 text-black">Buka (Masukkan Password)</button></div>`;
+                }
+            } catch(e) { extra = ''; }
             const content = `
                 <div class="p-6">
                     <h2 class="text-xl font-bold mb-2">Masukkan API Key</h2>
                     <p class="text-sm text-gray-400 mb-4">Dapatkan API Key gratis Anda dari Google AI Studio untuk menggunakan aplikasi ini. Kode API hanya disimpan di browser Anda.</p>
                     <input type="password" id="api-key-input" placeholder="AIza..." value="${state.apiKey || ''}" class="w-full p-2 border border-[var(--border-primary)] rounded-lg bg-[var(--bg-primary)] focus:outline-none focus:ring-1 focus:ring-blue-500">
+                    <div class="mt-3 flex items-center gap-2">
+                        <input type="checkbox" id="encrypt-api-key" /> <label for="encrypt-api-key" class="text-sm text-gray-400">Simpan API Key terenkripsi (dengan password)</label>
+                    </div>
+                    ${extra}
                 </div>
                 <div class="flex justify-end gap-3 px-6 py-4 bg-black/20 rounded-b-2xl">
                     <button id="close-modal-button" class="px-4 py-2 rounded-lg hover:bg-white/10">Batal</button>
@@ -522,7 +640,128 @@
             document.getElementById('confirm-cancel').onclick = hideModal;
         }
 
+        // --- New Tooling: Deep Research, Integrated Learning, Canva Editor ---
+        function openDeepResearch() {
+            // If we're in fullscreen, open as a new conversation with a prefilled prompt instead
+            if (document.fullscreenElement) {
+                unblockOverlaysFullScreen();
+                createNewConversation();
+                dom.userInput.value = 'Deep Research: [Masukkan topik riset di sini]';
+                autoResizeTextarea();
+                dom.userInput.focus();
+                return;
+            }
+            const content = `
+                <div class="p-6">
+                    <h2 class="text-xl font-bold mb-2">Deep Research</h2>
+                    <p class="text-sm text-gray-400 mb-4">Tool ini membantu membuat ringkasan riset mendalam. Masukkan query atau unggah referensi (PDF/URL) dan pilih cakupan (sekilas / detail / kutipan lengkap).</p>
+                    <input id="deep-query" class="w-full p-2 border border-[var(--border-primary)] rounded-md bg-[var(--bg-primary)]" placeholder="Masukkan topik riset..." />
+                    <div class="mt-3 flex gap-2">
+                        <select id="deep-scope" class="p-2 border border-[var(--border-primary)] rounded-md bg-[var(--bg-primary)]">
+                            <option value="overview">Sekilas</option>
+                            <option value="detailed">Detail</option>
+                            <option value="citations">Dengan Kutipan</option>
+                        </select>
+                        <button id="deep-run" class="px-3 py-2 bg-blue-600 text-white rounded-md">Jalankan</button>
+                    </div>
+                    <div id="deep-results" class="mt-4 max-h-60 overflow-auto"></div>
+                </div>
+            `;
+            showModal(content, 'max-w-2xl');
+            document.getElementById('deep-run').addEventListener('click', async () => {
+                const q = document.getElementById('deep-query').value.trim();
+                const scope = document.getElementById('deep-scope').value;
+                if (!q) return showToast('Masukkan query riset terlebih dahulu', 'warning');
+                const resEl = document.getElementById('deep-results'); resEl.innerHTML = '<em>Mencari dan merangkum...</em>';
+                // Placeholder: simulate research pipeline (real implementation would call external tools/APIs)
+                setTimeout(() => {
+                    resEl.innerHTML = `<div class="p-3 bg-[var(--surface-primary)] rounded-md"><strong>Ringkasan (${scope}):</strong><p class="mt-2">Hasil ringkasan cepat untuk <em>${escapeHtml(q)}</em>. (Prototype — integrasikan Google Search / scholarly APIs untuk hasil nyata.)</p></div>`;
+                }, 800);
+            });
+        }
+
+        function openLearning() {
+            if (document.fullscreenElement) {
+                unblockOverlaysFullScreen();
+                createNewConversation();
+                dom.userInput.value = 'Pembelajaran Terpadu: [Topik] - Tujuan belajar: ...';
+                autoResizeTextarea(); dom.userInput.focus(); return;
+            }
+            const content = `
+                <div class="p-6">
+                    <h2 class="text-xl font-bold mb-2">Pembelajaran Terpadu</h2>
+                    <p class="text-sm text-gray-400 mb-4">Buat modul pembelajaran interaktif: masukkan topik, tujuan belajar, dan tingkat kesulitan. Sistem akan membuat ringkasan, kuis singkat, dan bahan latihan.</p>
+                    <input id="learn-topic" class="w-full p-2 border border-[var(--border-primary)] rounded-md bg-[var(--bg-primary)]" placeholder="Topik (contoh: Persamaan Maxwell)" />
+                    <div class="mt-3 flex gap-2">
+                        <input id="learn-level" placeholder="Tingkat (pemula/menengah/lanjutan)" class="p-2 border border-[var(--border-primary)] rounded-md bg-[var(--bg-primary)]" />
+                        <button id="learn-run" class="px-3 py-2 bg-blue-600 text-white rounded-md">Buat Modul</button>
+                    </div>
+                    <div id="learn-results" class="mt-4 max-h-60 overflow-auto"></div>
+                </div>
+            `;
+            showModal(content, 'max-w-2xl');
+            document.getElementById('learn-run').addEventListener('click', () => {
+                const topic = document.getElementById('learn-topic').value.trim();
+                const level = document.getElementById('learn-level').value.trim() || 'pemula';
+                if (!topic) return showToast('Masukkan topik pembelajaran', 'warning');
+                const out = document.getElementById('learn-results'); out.innerHTML = '<em>Menghasilkan modul...</em>';
+                setTimeout(() => {
+                    out.innerHTML = `<div class="p-3 bg-[var(--surface-primary)] rounded-md"><h3 class="font-semibold">Modul singkat: ${escapeHtml(topic)}</h3><p>Tingkat: ${escapeHtml(level)}</p><ol class="mt-2"><li>Pengenalan singkat</li><li>Penjelasan konsep inti</li><li>Contoh latihan</li><li>Kuis singkat (3 soal)</li></ol></div>`;
+                }, 600);
+            });
+        }
+
+        // Canva-like code editor + preview (using ACE)
+        function openCanvaEditor() {
+            if (document.fullscreenElement) {
+                // open a new conversation and prefill with a canva template
+                unblockOverlaysFullScreen();
+                createNewConversation();
+                dom.userInput.value = '<Canva Template>\nJudul: ...\nDeskripsi: ...';
+                autoResizeTextarea(); dom.userInput.focus(); return;
+            }
+            const content = `
+                <div class="p-4 flex flex-col gap-3 h-[70vh]">
+                    <h2 class="text-xl font-bold">Canva - Editor & Preview</h2>
+                    <div class="flex gap-2 h-full">
+                        <div class="w-1/2 h-full border border-[var(--border-primary)] rounded-md p-1 bg-[var(--bg-primary)]">
+                            <div id="ace-editor" style="height:100%; width:100%;"></div>
+                        </div>
+                        <div class="w-1/2 h-full border border-[var(--border-primary)] rounded-md p-3 bg-[var(--surface-primary)] overflow-auto" id="canva-preview"></div>
+                    </div>
+                    <div class="flex justify-end gap-2">
+                        <button id="canva-run" class="px-3 py-2 bg-blue-600 text-white rounded-md">Render Preview</button>
+                        <button id="canva-close" class="px-3 py-2 bg-transparent border border-[var(--border-primary)] rounded-md">Tutup</button>
+                    </div>
+                </div>
+            `;
+            showModal(content, 'max-w-4xl');
+            // initialize ACE
+            setTimeout(() => {
+                try {
+                    if (typeof ace === 'undefined') { showToast('Editor ACE belum dimuat. Pastikan koneksi internet atau muat ulang halaman.', 'error'); return; }
+                    const editor = ace.edit('ace-editor');
+                    editor.setTheme('ace/theme/monokai');
+                    editor.session.setMode('ace/mode/html');
+                    editor.setValue('<div class="p-4"><h2>Judul</h2><p>Preview konten...</p></div>', -1);
+                    // hook buttons
+                    document.getElementById('canva-run').addEventListener('click', () => {
+                        const html = editor.getValue();
+                        let sanitized = html;
+                        try { sanitized = window.DOMPurify ? DOMPurify.sanitize(html) : html; } catch(e) { console.warn('DOMPurify sanitize failed', e); }
+                        document.getElementById('canva-preview').innerHTML = sanitized;
+                    });
+                    document.getElementById('canva-close').addEventListener('click', hideModal);
+                } catch(e) { console.error('ACE init error', e); showToast('Gagal inisialisasi editor', 'error'); }
+            }, 120);
+        }
+
         function showToast(message, type = 'success') {
+            // prevent duplicate toasts with same message within short window
+            if (!showToast.lastMessages) showToast.lastMessages = {};
+            const now = Date.now();
+            if (showToast.lastMessages[message] && now - showToast.lastMessages[message] < 1500) return;
+            showToast.lastMessages[message] = now;
             const toast = document.createElement('div');
             const colors = { success: 'bg-green-600', error: 'bg-red-600', warning: 'bg-yellow-600' };
             toast.className = `flex items-center gap-3 ${colors[type]} text-white px-4 py-2 rounded-lg shadow-lg toast-animation`;
@@ -532,7 +771,7 @@
             setTimeout(() => {
                 toast.classList.add('opacity-0', 'transition-opacity', 'duration-300');
                 toast.addEventListener('transitionend', () => toast.remove());
-            }, 4000);
+            }, 1100);
         }
 
         // --- CORE FUNCTIONALITY & API ---
@@ -635,13 +874,18 @@
             lucide.createIcons();
 
             try {
-                const model = "gemini-2.5-flash-preview-tts";
-                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${state.apiKey}`;
-                const payload = { contents: [{ parts: [{ text: textToSpeak }] }], generationConfig: { responseModalities: ["AUDIO"] }};
-                const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-                if (!response.ok) throw new Error(`TTS API Error: ${response.statusText}`);
-                const result = await response.json();
-                const audioDataB64 = result.candidates[0].content.parts[0].inlineData.data;
+                const cacheKey = btoa(textToSpeak).slice(0, 50);
+                let audioDataB64 = ttsCacheGet(cacheKey);
+                if (!audioDataB64) {
+                    const model = "gemini-2.5-flash-preview-tts";
+                    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${state.apiKey}`;
+                    const payload = { contents: [{ parts: [{ text: textToSpeak }] }], generationConfig: { responseModalities: ["AUDIO"] }};
+                    const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                    if (!response.ok) throw new Error(`TTS API Error: ${response.statusText}`);
+                    const result = await response.json();
+                    audioDataB64 = result.candidates[0].content.parts[0].inlineData.data;
+                    ttsCacheSet(cacheKey, audioDataB64);
+                }
                 const pcmData = base64ToArrayBuffer(audioDataB64);
                 const pcm16 = new Int16Array(pcmData);
                 const wavBlob = pcmToWav(pcm16, 24000);
@@ -667,6 +911,106 @@
         }
         
         // --- HELPERS & UTILITIES ---
+        // small utilities
+        function debounce(fn, wait=300){ let t; return (...args) => { clearTimeout(t); t = setTimeout(()=> fn(...args), wait); }; }
+
+        // Draft autosave per conversation
+        function saveDraft(id, text){ try { const drafts = JSON.parse(localStorage.getItem('chimera_drafts')||'{}'); drafts[id]=text; localStorage.setItem('chimera_drafts', JSON.stringify(drafts)); } catch(e) { console.warn('draft save failed', e);} }
+        function loadDraft(id){ try{ return JSON.parse(localStorage.getItem('chimera_drafts')||'{}')[id] || ''; }catch(e){ return ''; } }
+
+        // pin conversations
+        function togglePinConversation(id){ const conv = state.conversations[id]; if(!conv) return; conv.pinned = !conv.pinned; saveAllData(); loadConversations(); }
+
+        // message versioning helpers
+        function saveMessageVersion(convId, msgIndex, text){
+            try{
+                const conv = state.conversations[convId];
+                if (!conv) return;
+                conv.versions = conv.versions || {};
+                conv.versions[msgIndex] = conv.versions[msgIndex] || [];
+                conv.versions[msgIndex].push({ text, date: new Date().toISOString() });
+                // keep last 10 versions
+                if (conv.versions[msgIndex].length > 10) conv.versions[msgIndex].shift();
+                saveAllData();
+            }catch(e){ console.warn('save message version failed', e); }
+        }
+
+        function getMessageVersions(convId, msgIndex){ const conv = state.conversations[convId]; return (conv && conv.versions && conv.versions[msgIndex]) ? conv.versions[msgIndex] : []; }
+
+        function showMessageHistoryModal(convId, msgIndex){
+            const versions = getMessageVersions(convId, msgIndex);
+            if (!versions.length) return showToast('Tidak ada riwayat untuk pesan ini.', 'warning');
+            let listHTML = '<div class="p-4 space-y-2 max-h-64 overflow-auto">';
+            versions.slice().reverse().forEach((v, i) => {
+                listHTML += `<div class="p-3 border rounded-md bg-[var(--surface-primary)]"><div class="text-xs text-gray-400">${new Date(v.date).toLocaleString()}</div><pre class="whitespace-pre-wrap mt-2 text-sm">${escapeHtml(v.text)}</pre><div class="mt-2 text-right"><button data-rev="${versions.length-1-i}" data-idx="${msgIndex}" class="revert-version-btn px-3 py-1 rounded-md bg-blue-600 text-white">Revert</button></div></div>`;
+            });
+            listHTML += '</div>';
+            showModal(`<div class="p-4"><h3 class="text-lg font-semibold mb-2">Riwayat Pesan</h3>${listHTML}</div>`, 'max-w-xl');
+        }
+
+        function revertMessageVersion(convId, msgIndex, versionIndex){
+            const conv = state.conversations[convId];
+            const versions = getMessageVersions(convId, msgIndex);
+            if (!conv || !versions[versionIndex]) return showToast('Versi tidak ditemukan', 'error');
+            // push current to versions before revert
+            const current = conv.history[msgIndex]?.parts?.[0]?.text || '';
+            saveMessageVersion(convId, msgIndex, current);
+            conv.history[msgIndex].parts[0].text = versions[versionIndex].text;
+            saveAllData();
+            hideModal();
+            renderConversation(convId);
+            showToast('Pesan berhasil dikembalikan ke versi sebelumnya.');
+        }
+
+        function escapeHtml(str){ return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+        function conversationToMarkdown(conv){
+            let out = `# ${conv.title || 'Percakapan'}\n\n`;
+            (conv.history || []).forEach(msg => {
+                const role = msg.role === 'user' ? 'User' : 'Assistant';
+                const text = (msg.parts||[]).map(p=> p.text || '').join('\n');
+                out += `**${role}:**\n\n${text.replace(/\n/g,'\n\n')}\n\n---\n\n`;
+            });
+            return out;
+        }
+
+        function conversationToHTML(conv){
+            const title = escapeHtml(conv.title || 'Percakapan');
+            let body = `<h1>${title}</h1>`;
+            (conv.history || []).forEach(msg => {
+                const role = msg.role === 'user' ? 'User' : 'Assistant';
+                const text = (msg.parts||[]).map(p=> escapeHtml(p.text || '')).join('\n');
+                body += `<div style="margin-bottom:1rem"><strong>${role}:</strong><div style="white-space:pre-wrap;margin-top:0.5rem">${text}</div></div>`;
+            });
+            return `<!doctype html><html><head><meta charset="utf-8"><title>${title}</title></head><body>${body}</body></html>`;
+        }
+
+        // sanitize filenames for downloads
+        function sanitizeFilename(name){ return String(name).replace(/[^a-z0-9_\-\. ]/gi,'').replace(/\s+/g,'_').slice(0,200); }
+
+        // simple encryption helpers for API key using WebCrypto (password-based)
+        async function deriveKeyFromPassword(password, salt) {
+            const enc = new TextEncoder();
+            const keyMaterial = await window.crypto.subtle.importKey('raw', enc.encode(password), {name:'PBKDF2'}, false, ['deriveKey']);
+            return window.crypto.subtle.deriveKey({name:'PBKDF2', salt: salt, iterations: 100000, hash: 'SHA-256'}, keyMaterial, {name:'AES-GCM', length: 256}, true, ['encrypt','decrypt']);
+        }
+        async function encryptWithPassword(password, data){ try{
+            const salt = window.crypto.getRandomValues(new Uint8Array(16));
+            const key = await deriveKeyFromPassword(password, salt);
+            const iv = window.crypto.getRandomValues(new Uint8Array(12));
+            const ct = await window.crypto.subtle.encrypt({name:'AES-GCM', iv}, key, new TextEncoder().encode(data));
+            const payload = {salt: Array.from(salt), iv: Array.from(iv), ct: Array.from(new Uint8Array(ct))};
+            return btoa(JSON.stringify(payload));
+        } catch(e){ console.warn('encrypt failed', e); return null; } }
+        async function decryptWithPassword(password, b64){ try{ const raw = JSON.parse(atob(b64)); const salt = new Uint8Array(raw.salt); const iv = new Uint8Array(raw.iv); const ct = new Uint8Array(raw.ct); const key = await deriveKeyFromPassword(password, salt); const pt = await window.crypto.subtle.decrypt({name:'AES-GCM', iv}, key, ct); return new TextDecoder().decode(pt); } catch(e){ console.warn('decrypt failed', e); return null; } }
+
+        // lazy-load Tesseract for OCR when needed
+        let tesseractLoaded = false;
+        async function ensureTesseract(){ if(tesseractLoaded) return; tesseractLoaded = true; const s = document.createElement('script'); s.src = 'https://cdn.jsdelivr.net/npm/tesseract.js@2.1.5/dist/tesseract.min.js'; document.head.appendChild(s); await new Promise(r => s.onload = r); }
+
+        // small TTS cache using sessionStorage
+        function ttsCacheGet(key){ try{ return sessionStorage.getItem('tts_'+key); }catch(e){return null;} }
+        function ttsCacheSet(key, data){ try{ sessionStorage.setItem('tts_'+key, data); }catch(e){} }
 
         function fileToBase64(file) { return new Promise((resolve, reject) => { const reader = new FileReader(); reader.onload = () => resolve(reader.result.split(',')[1]); reader.onerror = error => reject(error); reader.readAsDataURL(file); }); }
         function toggleFullscreen() { if (!document.fullscreenElement) { dom.appContainer.requestFullscreen().catch(err => showToast(`Error: ${err.message}`, 'error')); dom.fullscreenBtn.innerHTML = `<i data-lucide="minimize"></i> Keluar Layar Penuh`; } else { document.exitFullscreen(); dom.fullscreenBtn.innerHTML = `<i data-lucide="maximize"></i> Layar Penuh`; } lucide.createIcons(); }
@@ -736,16 +1080,92 @@
             dom.sendButton.addEventListener('click', sendMessageToAI);
             dom.userInput.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessageToAI(); } });
             dom.userInput.addEventListener('input', autoResizeTextarea);
+            // autosave draft (debounced)
+            const saveDraftDebounced = debounce(() => { if (state.activeConversationId) saveDraft(state.activeConversationId, dom.userInput.value); }, 700);
+            dom.userInput.addEventListener('input', saveDraftDebounced);
+            // keyboard shortcuts
+            document.addEventListener('keydown', (e) => {
+                if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); dom.searchInput?.focus(); }
+                if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); sendMessageToAI(); }
+                if (e.key === 'Escape') { hideModal(); }
+            });
             dom.sidebarToggle.addEventListener('click', openSidebar);
             dom.sidebarClose.addEventListener('click', closeSidebar);
             dom.sidebarOverlay.addEventListener('click', closeSidebar);
             dom.fullscreenBtn.addEventListener('click', toggleFullscreen);
             dom.apiKeyButton.addEventListener('click', showApiKeyModal);
-            dom.settingsButton.addEventListener('click', showSettingsModal);
-            dom.themeToggle.addEventListener('click', () => { state.currentTheme = state.currentTheme === 'dark' ? 'light' : 'dark'; localStorage.setItem('chimera_theme', state.currentTheme); updateThemeUI(); });
+            if (dom.settingsButton) dom.settingsButton.addEventListener('click', showSettingsModal); else console.warn('settingsButton not found');
+            // new tools
+            if (dom.deepResearchBtn) dom.deepResearchBtn.addEventListener('click', openDeepResearch); else console.warn('deepResearchBtn not found');
+            if (dom.learningBtn) dom.learningBtn.addEventListener('click', openLearning); else console.warn('learningBtn not found');
+            if (dom.canvaBtn) dom.canvaBtn.addEventListener('click', openCanvaEditor); else console.warn('canvaBtn not found');
+            dom.themeToggle.addEventListener('click', () => {
+                const themes = ['dark','light','sunset'];
+                const idx = themes.indexOf(state.currentTheme);
+                state.currentTheme = themes[(idx + 1) % themes.length];
+                localStorage.setItem('chimera_theme', state.currentTheme);
+                updateThemeUI();
+            });
             dom.stopGenerationBtn.addEventListener('click', () => { if (state.abortController) state.abortController.abort(); });
+
+            // multi-select toggle
+            dom.multiSelectToggle?.addEventListener('click', () => {
+                state.multiSelectActive = !state.multiSelectActive;
+                state.selectedConversations = {};
+                dom.bulkActionBar.classList.toggle('hidden', !state.multiSelectActive);
+                loadConversations();
+            });
+
+            dom.bulkCancelBtn?.addEventListener('click', () => {
+                state.multiSelectActive = false; state.selectedConversations = {}; dom.bulkActionBar.classList.add('hidden'); loadConversations();
+            });
+
+            dom.bulkDeleteBtn?.addEventListener('click', () => {
+                const ids = Object.keys(state.selectedConversations).filter(id=> state.selectedConversations[id]);
+                if (!ids.length) return showToast('Pilih percakapan terlebih dahulu', 'warning');
+                showCustomConfirm('Hapus percakapan terpilih?', `Hapus ${ids.length} percakapan?`, () => {
+                    ids.forEach(id => delete state.conversations[id]);
+                    state.multiSelectActive = false; state.selectedConversations = {}; dom.bulkActionBar.classList.add('hidden'); saveAllData(); loadConversations(); showToast('Percakapan terhapus', 'warning');
+                });
+            });
+
+            dom.bulkExportBtn?.addEventListener('click', () => {
+                const ids = Object.keys(state.selectedConversations).filter(id=> state.selectedConversations[id]);
+                if (!ids.length) return showToast('Pilih percakapan terlebih dahulu', 'warning');
+                ids.forEach(id => { const conv = state.conversations[id]; const blob = new Blob([JSON.stringify(conv, null, 2)], {type: 'application/json'}); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = `${conv.title || id}.json`; a.click(); URL.revokeObjectURL(url); });
+                showToast('Ekspor selesai');
+            });
+
+            dom.bulkPinBtn?.addEventListener('click', () => {
+                const ids = Object.keys(state.selectedConversations).filter(id=> state.selectedConversations[id]);
+                if (!ids.length) return showToast('Pilih percakapan terlebih dahulu', 'warning');
+                ids.forEach(id => { const c = state.conversations[id]; if (c) c.pinned = !c.pinned; });
+                state.multiSelectActive = false; state.selectedConversations = {}; dom.bulkActionBar.classList.add('hidden'); saveAllData(); loadConversations(); showToast('Toggle pin diterapkan');
+            });
+
+            // delegated checkbox changes
+            dom.conversationHistory.addEventListener('change', (e) => {
+                const cb = e.target.closest('.conv-select-checkbox');
+                if (!cb) return;
+                const id = cb.dataset.id;
+                state.selectedConversations[id] = cb.checked;
+            });
             
-            dom.imageUploadInput.addEventListener('change', async (e) => { const file = e.target.files[0]; if (file) { state.uploadedImage = await fileToBase64(file); dom.imagePreviewContainer.innerHTML = ` <div class="relative inline-block"> <img src="${URL.createObjectURL(file)}" class="h-14 w-14 object-cover rounded-md"> <button id="remove-image-btn" class="absolute -top-1 -right-1 bg-red-500 text-white rounded-full p-0.5"><i data-lucide="x" class="w-3 h-3"></i></button> </div>`; lucide.createIcons(); } });
+            dom.imageUploadInput.addEventListener('change', async (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    state.uploadedImage = await fileToBase64(file);
+                    dom.imagePreviewContainer.innerHTML = `
+                        <div class="relative inline-block">
+                            <img src="${URL.createObjectURL(file)}" class="h-14 w-14 object-cover rounded-md">
+                            <div class="absolute right-0 top-0 flex gap-1">
+                                <button id="remove-image-btn" class="bg-red-500 text-white rounded-full p-0.5"><i data-lucide="x" class="w-3 h-3"></i></button>
+                            </div>
+                            <button id="ocr-image-btn" class="mt-1 w-full text-xs bg-blue-600 text-white rounded-md px-2 py-1">OCR</button>
+                        </div>`;
+                    lucide.createIcons();
+                }
+            });
 
             if (state.recognition) {
                 dom.micBtn.addEventListener('click', () => { dom.micBtn.classList.add('mic-listening'); state.recognition.start(); });
@@ -755,27 +1175,326 @@
             }
 
             document.body.addEventListener('click', (e) => {
-                if (!e.target.closest('div[class*="max-w-"]') && !e.target.closest('#api-key-button') && !e.target.closest('#settings-button')) hideModal();
+                // close modal when clicking on backdrop or outside modal content
+                if (e.target.id === 'modal-backdrop' || e.target.id === 'modal-backdrop' || e.target.closest('#modal-backdrop')) {
+                    hideModal();
+                }
+                if (!e.target.closest('div[class*="max-w-"]') && !e.target.closest('#api-key-button') && !e.target.closest('#settings-button') && !e.target.closest('#modal-backdrop')) hideModal();
                 if (e.target.id === 'close-modal-button' || e.target.id === 'close-settings-button') hideModal();
+
+                // delegated fallback for new tools (in case direct binding failed)
+                const dr = e.target.closest('#deep-research-btn');
+                if (dr) { console.log('Delegated click: deep-research-btn'); try { unblockOverlaysFullScreen(); } catch(e){} openDeepResearch(); }
+                const lrn = e.target.closest('#learning-btn');
+                if (lrn) { console.log('Delegated click: learning-btn'); try { unblockOverlaysFullScreen(); } catch(e){} openLearning(); }
+                const cnv = e.target.closest('#canva-btn');
+                if (cnv) { console.log('Delegated click: canva-btn'); try { unblockOverlaysFullScreen(); } catch(e){} openCanvaEditor(); }
                 
-                if (e.target.id === 'save-api-key-button') { const newKey = document.getElementById('api-key-input').value.trim(); if(newKey) { state.apiKey = newKey; saveAllData(); updateApiKeyUI(); hideModal(); showToast('API Key berhasil disimpan!'); } else { showToast('API Key tidak boleh kosong.', 'error'); } }
+                if (e.target.id === 'save-api-key-button') {
+                    (async () => {
+                        const newKey = document.getElementById('api-key-input').value.trim();
+                        if (!newKey) return showToast('API Key tidak boleh kosong.', 'error');
+                        const shouldEncrypt = document.getElementById('encrypt-api-key')?.checked;
+                        if (shouldEncrypt) {
+                            const pw = prompt('Masukkan password untuk mengenkripsi API Key (ingat password ini):');
+                            if (!pw) return showToast('Enkripsi dibatalkan. Password tidak boleh kosong.', 'error');
+                            const blob = await encryptWithPassword(pw, newKey);
+                            if (!blob) return showToast('Gagal mengenkripsi API Key.', 'error');
+                            state.apiKey = blob;
+                            saveAllData();
+                            updateApiKeyUI();
+                            hideModal();
+                            showToast('API Key tersimpan (terenkripsi). Ingat password untuk membuka.');
+                        } else {
+                            state.apiKey = newKey;
+                            saveAllData();
+                            updateApiKeyUI();
+                            hideModal();
+                            showToast('API Key berhasil disimpan!');
+                        }
+                    })();
+                }
                 if (e.target.id === 'save-settings-button') { state.settings.persona = document.getElementById('persona-select').value; state.settings.customSystemPrompt = document.getElementById('system-prompt-input').value; saveAllData(); hideModal(); showToast('Pengaturan disimpan!'); }
                 if (e.target.closest('#persona-select')) { document.getElementById('custom-prompt-container').classList.toggle('hidden', e.target.value !== 'custom'); }
 
+                if (e.target.id === 'unlock-api-key-btn') {
+                    (async () => {
+                        const pw = prompt('Masukkan password untuk membuka API Key terenkripsi:');
+                        if (!pw) return showToast('Password dibatalkan.', 'error');
+                        const decrypted = await decryptWithPassword(pw, state.apiKey);
+                        if (!decrypted) return showToast('Password salah atau dekripsi gagal.', 'error');
+                        state.apiKey = decrypted; // keep decrypted in session
+                        updateApiKeyUI();
+                        hideModal();
+                        showToast('API Key berhasil didekripsi untuk sesi ini.');
+                    })();
+                }
+
                 if (e.target.id === 'reset-all-settings-btn') { showCustomConfirm('Reset Semua Data?', 'Ini akan menghapus semua riwayat percakapan dan pengaturan, termasuk API Key Anda. Aksi ini tidak bisa dibatalkan.', () => { localStorage.clear(); initState(); updateApiKeyUI(); loadConversations(); createNewConversation(); showToast('Semua data telah direset.', 'warning'); }); }
                 if (e.target.id === 'export-chat-btn') { const data = JSON.stringify(state.conversations, null, 2); const blob = new Blob([data], {type: 'application/json'}); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = `chimera-v7-all-chats.json`; a.click(); URL.revokeObjectURL(url); showToast('Semua percakapan diekspor!'); }
+                if (e.target.id === 'export-single-chat-btn') {
+                    const conv = state.conversations[state.activeConversationId]; if (!conv) return showToast('Tidak ada percakapan aktif', 'error');
+                    const content = `
+                        <div class="p-6">
+                            <h2 class="text-xl font-bold mb-2">Ekspor Percakapan</h2>
+                            <p class="text-sm text-gray-400 mb-4">Pilih format ekspor untuk percakapan: Markdown (.md), HTML (.html), atau Cetak ke PDF.</p>
+                            <div class="flex gap-2">
+                                <button id="export-md-btn" class="px-3 py-2 rounded-md bg-gray-700 text-white">Export Markdown</button>
+                                <button id="export-html-btn" class="px-3 py-2 rounded-md bg-gray-600 text-white">Export HTML</button>
+                                <button id="export-pdf-btn" class="px-3 py-2 rounded-md bg-blue-600 text-white">Cetak / Save as PDF</button>
+                            </div>
+                        </div>
+                    `;
+                    showModal(content, 'max-w-md');
+                }
+                if (e.target.id === 'export-md-btn') {
+                    const conv = state.conversations[state.activeConversationId]; if (!conv) return showToast('Tidak ada percakapan aktif', 'error');
+                    const md = conversationToMarkdown(conv);
+                    const blob = new Blob([md], { type: 'text/markdown' }); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = `${conv.title || 'chat'}.md`; a.click(); URL.revokeObjectURL(url); showToast('Markdown diekspor!'); hideModal();
+                }
+                if (e.target.id === 'export-html-btn') {
+                    const conv = state.conversations[state.activeConversationId]; if (!conv) return showToast('Tidak ada percakapan aktif', 'error');
+                    const html = conversationToHTML(conv);
+                    const blob = new Blob([html], { type: 'text/html' }); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = `${conv.title || 'chat'}.html`; a.click(); URL.revokeObjectURL(url); showToast('HTML diekspor!'); hideModal();
+                }
+                if (e.target.id === 'export-pdf-btn') {
+                    const conv = state.conversations[state.activeConversationId]; if (!conv) return showToast('Tidak ada percakapan aktif', 'error');
+                    try {
+                        const rawHtml = conversationToHTML(conv);
+                        // create container
+                        const container = document.createElement('div');
+                        container.style.padding = '20px';
+                        container.style.fontFamily = 'Inter, Arial, sans-serif';
+                        container.innerHTML = rawHtml;
+
+                        // basic print styles
+                        const style = document.createElement('style');
+                        style.textContent = `body { color: #0f172a; } h1 { font-size: 20px; margin-bottom: 8px; } pre { background:#f6f8fa; padding:12px; border-radius:6px; overflow:auto; }`;
+                        container.prepend(style);
+
+                        const opt = {
+                            margin:       10,
+                            filename:     sanitizeFilename(`${conv.title || 'chat'}.pdf`),
+                            image:        { type: 'jpeg', quality: 0.98 },
+                            html2canvas:  { scale: 2, useCORS: true },
+                            jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                        };
+                        hideModal();
+                        showToast('Menghasilkan PDF — tunggu sebentar...', 'warning');
+                        (async () => {
+                            await html2pdf().set(opt).from(container).save();
+                            showToast('PDF berhasil dibuat dan diunduh!');
+                        })();
+                    } catch(err) {
+                        console.error('PDF export error', err);
+                        showToast('Gagal membuat PDF.', 'error');
+                    }
+                }
+                if (e.target.id === 'search-input') { /* handled by input event */ }
                 
                 const copyBtn = e.target.closest('.copy-response-btn');
                 if (copyBtn) { const text = copyBtn.closest('.group').querySelector('.markdown-content').innerText; navigator.clipboard.writeText(text).then(() => showToast('Respons disalin!')).catch(() => showToast('Gagal menyalin', 'error')); }
                 
                 const ttsBtn = e.target.closest('.tts-btn');
                 if (ttsBtn) { const text = ttsBtn.closest('.group').querySelector('.markdown-content').innerText; playTextToSpeech(text, ttsBtn); }
-                
+
+                const editBtn = e.target.closest('.edit-message-btn');
+                if (editBtn) {
+                    const idx = Number(editBtn.dataset.index);
+                    const conv = state.conversations[state.activeConversationId];
+                    if (!conv || !conv.history[idx]) return showToast('Pesan tidak ditemukan.', 'error');
+                    const current = conv.history[idx].parts[0].text || '';
+                    const newText = prompt('Edit pesan:', current);
+                    if (newText !== null) {
+                        // save previous version
+                        saveMessageVersion(state.activeConversationId, idx, current);
+                        conv.history[idx].parts[0].text = newText;
+                        saveAllData();
+                        renderConversation(state.activeConversationId);
+                        showToast('Pesan diperbarui. Versi lama disimpan.');
+                    }
+                }
+
+                const delMsgBtn = e.target.closest('.delete-message-btn');
+                if (delMsgBtn) {
+                    const idx = Number(delMsgBtn.dataset.index);
+                    const conv = state.conversations[state.activeConversationId];
+                    if (!conv || !conv.history[idx]) return showToast('Pesan tidak ditemukan.', 'error');
+                    showCustomConfirm('Hapus pesan?', 'Anda yakin ingin menghapus pesan ini?', () => {
+                        conv.history.splice(idx, 1);
+                        saveAllData();
+                        renderConversation(state.activeConversationId);
+                        showToast('Pesan dihapus.', 'warning');
+                    });
+                }
+                const historyBtn = e.target.closest('.history-message-btn');
+                if (historyBtn) {
+                    const idx = Number(historyBtn.dataset.index);
+                    showMessageHistoryModal(state.activeConversationId, idx);
+                }
+
+                const revertBtn = e.target.closest('.revert-version-btn');
+                if (revertBtn) {
+                    const idx = Number(revertBtn.dataset.idx);
+                    const rev = Number(revertBtn.dataset.rev);
+                    revertMessageVersion(state.activeConversationId, idx, rev);
+                }
                 const welcomeBtn = e.target.closest('.welcome-prompt-btn');
                 if(welcomeBtn) { dom.userInput.value = welcomeBtn.dataset.prompt; sendMessageToAI(); }
 
+                // OCR button
+                if (e.target.closest('#ocr-image-btn')) {
+                    (async () => {
+                        const ocrBtn = e.target.closest('#ocr-image-btn');
+                        try {
+                            await ensureTesseract();
+                            showToast('Memproses OCR...');
+                            const img = ocrBtn.closest('div').querySelector('img');
+                            const worker = Tesseract.createWorker();
+                            await worker.load(); await worker.loadLanguage('eng'); await worker.initialize('eng');
+                            const { data: { text } } = await worker.recognize(img.src);
+                            await worker.terminate();
+                            dom.userInput.value = (dom.userInput.value ? dom.userInput.value + '\n' : '') + text;
+                            autoResizeTextarea();
+                            showToast('OCR selesai, teks ditambahkan ke input');
+                        } catch(e) { console.error('OCR error', e); showToast('Gagal melakukan OCR', 'error'); }
+                    })();
+                }
+
                 if (e.target.closest('#remove-image-btn')) { state.uploadedImage = null; dom.imagePreviewContainer.innerHTML = ''; dom.imageUploadInput.value = ''; }
             });
+
+            // Refresh UI when entering/exiting fullscreen to avoid broken icons/editor
+            document.addEventListener('fullscreenchange', () => {
+                try { lucide.createIcons(); mermaid.initialize({ startOnLoad: false, theme: state.currentTheme }); }
+                catch(e){ console.warn('refresh after fullscreen failed', e); }
+                // if Canva modal open, try to re-render preview
+                const canvaPreview = document.getElementById('canva-preview');
+                if (canvaPreview && window.DOMPurify) {
+                    try { canvaPreview.innerHTML = DOMPurify.sanitize(canvaPreview.innerHTML); } catch(e) { /* ignore */ }
+                }
+                // attempt to re-init ACE if present
+                try { if (typeof ace !== 'undefined' && document.getElementById('ace-editor')) ace.edit('ace-editor').resize(); } catch(e) { /* ignore */ }
+                // ensure overlays do not block clicks in fullscreen if no modal is visible
+                try {
+                    const modalVisible = !dom.modalBackdrop.classList.contains('opacity-0');
+                    if (!modalVisible) {
+                        dom.sidebarOverlay.classList.add('hidden');
+                        dom.modalBackdrop.classList.add('pointer-events-none');
+                    } else {
+                        dom.modalBackdrop.classList.remove('pointer-events-none');
+                    }
+                } catch(e) { /* ignore */ }
+                // aggressive disable of large blocking elements when entering fullscreen
+                try {
+                    if (document.fullscreenElement) {
+                        aggressiveDisableBlockingOverlays();
+                    } else {
+                        aggressiveRestoreBlockingOverlays();
+                    }
+                } catch(e) { console.warn('aggressive overlay toggle failed', e); }
+            });
+
+                    // helper to force-hide overlays that may block clicks in fullscreen
+                    function unblockOverlaysFullScreen() {
+                        try {
+                            if (dom.sidebarOverlay) {
+                                dom.sidebarOverlay.classList.add('hidden');
+                                dom.sidebarOverlay.style.pointerEvents = 'none';
+                            }
+                            if (dom.modalBackdrop) {
+                                dom.modalBackdrop.classList.add('opacity-0');
+                                dom.modalBackdrop.classList.add('pointer-events-none');
+                                dom.modalBackdrop.style.pointerEvents = 'none';
+                            }
+                        } catch(e) { console.warn('unblock overlays failed', e); }
+                    }
+
+                    // --- aggressive fullscreen overlay handler ---
+                    const _fsDisabled = new WeakMap();
+                    function aggressiveDisableBlockingOverlays() {
+                        try {
+                            const vw = window.innerWidth, vh = window.innerHeight;
+                            const els = Array.from(document.body.querySelectorAll('*'));
+                            for (const el of els) {
+                                if (!el.offsetParent && getComputedStyle(el).position === 'fixed') {
+                                    // continue - maybe small hidden fixed elements
+                                }
+                                const rect = el.getBoundingClientRect();
+                                if (rect.width <= 0 || rect.height <= 0) continue;
+                                const area = rect.width * rect.height; const viewArea = vw * vh;
+                                // if element covers more than half viewport and is not the app container or sidebar
+                                if (area / viewArea > 0.5 && !el.closest('#app-container') && !el.closest('#sidebar')) {
+                                    // store original inline styles
+                                    const orig = { display: el.style.display || '', visibility: el.style.visibility || '', pointerEvents: el.style.pointerEvents || '' };
+                                    _fsDisabled.set(el, orig);
+                                    el.style.display = 'none';
+                                    el.style.pointerEvents = 'none';
+                                    el.style.visibility = 'hidden';
+                                    console.log('aggressive disabled overlay', el);
+                                }
+                            }
+                        } catch(e) { console.warn('aggressiveDisable error', e); }
+                    }
+
+                    function aggressiveRestoreBlockingOverlays() {
+                        try {
+                            _fsDisabled.forEach((orig, el) => {
+                                try { el.style.display = orig.display; el.style.visibility = orig.visibility; el.style.pointerEvents = orig.pointerEvents; } catch(e){}
+                            });
+                            // clear map
+                            // WeakMap cannot be iterated to clear; create new WeakMap instead
+                            // (we'll just replace it)
+                            // eslint-disable-next-line no-unused-vars
+                            _fsDisabled = new WeakMap();
+                        } catch(e) { console.warn('aggressiveRestore error', e); }
+                    }
+
+                    // --- click inspector (debugging) ---
+                    let clickInspectorActive = false;
+                    let inspectorOverlay = null;
+                    function toggleClickInspector() {
+                        clickInspectorActive = !clickInspectorActive;
+                        if (!clickInspectorActive) {
+                            if (inspectorOverlay) { inspectorOverlay.remove(); inspectorOverlay = null; }
+                            document.removeEventListener('click', clickInspectorHandler, true);
+                            showToast('Inspector klik dimatikan', 'success');
+                            return;
+                        }
+                        inspectorOverlay = document.createElement('div');
+                        inspectorOverlay.style.position = 'fixed'; inspectorOverlay.style.left = 0; inspectorOverlay.style.top = 0; inspectorOverlay.style.right = 0; inspectorOverlay.style.bottom = 0; inspectorOverlay.style.pointerEvents = 'none'; inspectorOverlay.style.zIndex = 9999999;
+                        document.body.appendChild(inspectorOverlay);
+                        document.addEventListener('click', clickInspectorHandler, true);
+                        showToast('Inspector klik aktif: klik elemen untuk melihat info (ESC untuk tutup)', 'success');
+                    }
+
+                    function clickInspectorHandler(e) {
+                        e.stopPropagation(); e.preventDefault();
+                        const el = e.target;
+                        const rect = el.getBoundingClientRect();
+                        if (inspectorOverlay) inspectorOverlay.innerHTML = '';
+                        const box = document.createElement('div');
+                        box.style.position = 'absolute'; box.style.left = `${rect.left}px`; box.style.top = `${rect.top}px`;
+                        box.style.width = `${rect.width}px`; box.style.height = `${rect.height}px`;
+                        box.style.border = '3px solid rgba(255,0,0,0.9)'; box.style.background = 'rgba(255,0,0,0.08)'; box.style.pointerEvents = 'none';
+                        inspectorOverlay.appendChild(box);
+                        console.log('Inspector clicked element', el, 'rect', rect, 'computedStyle', getComputedStyle(el));
+                        showToast(`Element: ${el.tagName.toLowerCase()} id=${el.id || '-'} class=${el.className || '-'} top=${Math.round(rect.top)}`, 'success');
+                    }
+
+                    // toggle inspector with Ctrl+Shift+D
+                    document.addEventListener('keydown', (e) => {
+                        if (e.ctrlKey && e.shiftKey && e.code === 'KeyD') { toggleClickInspector(); }
+                        if (e.key === 'Escape' && clickInspectorActive) { toggleClickInspector(); }
+                    });
+
+            // search input listener (debounced)
+            if (dom.searchInput) dom.searchInput.addEventListener('input', debounce(() => loadConversations(), 250));
+
+            // register service worker if available
+            if ('serviceWorker' in navigator) {
+                try { navigator.serviceWorker.register('sw.js'); console.info('Service worker registered'); } catch(e) { console.warn('SW registration failed', e); }
+            }
         }
         
         init();
@@ -783,4 +1502,3 @@
     </script>
 </body>
 </html>
-
