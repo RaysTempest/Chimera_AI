@@ -26,6 +26,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.11.2/ace.min.js"></script>
 
     <style>
+    :root { --sidebar-width: 260px; }
         :root {
             --bg-dark: #020617; --bg-light: #f8fafc;
             --surface-dark: #0f172a; --surface-light: #ffffff;
@@ -64,8 +65,8 @@
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background-color: rgba(128, 128, 128, 0.3); border-radius: 10px; border: 2px solid transparent; background-clip: content-box;}
         .glass-effect {
-            background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(24px);
-            -webkit-backdrop-filter: blur(24px); border: 1px solid var(--border-primary);
+            background: rgba(15, 23, 42, 0.62); backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.04);
         }
         html.light .glass-effect { background: rgba(255, 255, 255, 0.7); }
 
@@ -102,56 +103,179 @@
         
         .streaming-cursor::after {
             content: '▍'; animation: blink 1s step-end infinite; color: var(--accent);
-            margin-left: 2px; font-weight: bold;
+            margin-left: 6px; font-weight: 700;
         }
         @keyframes blink { 50% { opacity: 0; } }
         @keyframes pulse-red { 0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); } 70% { box-shadow: 0 0 0 5px rgba(239, 68, 68, 0); } }
         .api-status-pulse { animation: pulse-red 2s infinite; }
         @keyframes mic-pulse { 0%, 100% { color: var(--accent); } 50% { color: #f87171; } }
         .mic-listening { animation: mic-pulse 1.5s ease-in-out infinite; }
+        /* Fullscreen helper: ensure app container covers full viewport when in fullscreen mode
+           and reduce potential layout jumps by forcing width/height 100% */
+        .in-fullscreen, :fullscreen #app-container, :-webkit-full-screen #app-container {
+            width: 100vw !important;
+            height: 100vh !important;
+            max-width: 100vw !important;
+            max-height: 100vh !important;
+        }
+
+    /* Floating hamburger tools button */
+
+    /* When sidebar-open class applied, add left margin to main to avoid overlap on wide screens */
+    .sidebar-open #app-container main { margin-left: var(--sidebar-width); transition: margin-left 0.25s ease; }
+    /* Modern button baseline */
+    button { font-family: var(--font-body); cursor: pointer; }
+    .btn { padding: 8px 12px; border-radius: 8px; border: 1px solid transparent; background: linear-gradient(180deg,var(--accent),var(--accent-hover)); color: white; box-shadow: 0 6px 18px rgba(37,99,235,0.12); transition: transform .12s ease, box-shadow .12s ease, opacity .12s ease; }
+    .btn:active { transform: translateY(1px) scale(.998); }
+    .btn-ghost { background: transparent; border-color: rgba(255,255,255,0.04); color: var(--text-primary); }
+    /* Modal content wrapper must accept pointer events to ensure inner controls are interactive */
+    #modal-content-wrapper { pointer-events: auto; outline: none; }
+    #modal-backdrop { display:flex; align-items:center; justify-content:center; }
+        @media (max-width: 768px) { .sidebar-open #app-container main { margin-left: 0; } }
+    /* Sidebar inner scroll & segment styling */
+    .sidebar-inner { display: flex; flex-direction: column; height: 100%; box-sizing: border-box; }
+    aside#sidebar { background: linear-gradient(180deg, rgba(20,10,10,0.6), rgba(20,10,10,0.75)); }
+    aside#sidebar .pt-4 { padding-top: 0; }
+    .sidebar-top { flex: 0 0 auto; }
+    .sidebar-middle { flex: 1 1 auto; overflow-y: auto; padding-right: 4px; }
+    /* Conversation list pills */
+    #conversation-history { padding: 8px 4px; }
+    .conv-pill { display:flex; align-items:center; gap:0.6rem; padding:8px 10px; border-radius:10px; background: transparent; border:0; }
+    .conv-pill .conv-radio { width:12px; height:12px; border-radius:50%; border:2px solid rgba(255,255,255,0.35); display:inline-block; flex-shrink:0; margin-right:6px }
+    .conv-pill.active { background: rgba(255,255,255,0.02); }
+    .conv-pill.active .conv-radio { background: rgba(37,99,235,0.95); border-color: rgba(37,99,235,0.9); }
+    /* subtle separators like professional chat apps */
+    #conversation-history .conversation-list-item + .conversation-list-item { border-top: 1px solid rgba(255,255,255,0.03); }
+    .conv-pill .title { font-weight:600; font-size:0.95rem; color:rgba(255,255,255,0.95); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .conv-pill .subtitle { font-size:0.78rem; color:rgba(255,255,255,0.55); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .conversation-list-item { margin-bottom:6px; }
+    /* Slim scrollbar for sidebar */
+    aside#sidebar::-webkit-scrollbar, .sidebar-middle::-webkit-scrollbar { width:8px; }
+    aside#sidebar::-webkit-scrollbar-thumb, .sidebar-middle::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.05); border-radius:6px; }
+    /* polished, extra-compact sidebar visuals (Tailwind-friendly) */
+    :root { --sidebar-width: 200px; }
+    aside#sidebar { background: linear-gradient(180deg, rgba(12,12,14,0.92), rgba(20,20,24,0.96)); box-shadow: inset 0 1px 0 rgba(255,255,255,0.02); }
+    aside#sidebar button { padding-top: 0.18rem; padding-bottom: 0.18rem; padding-left: 0.45rem; padding-right: 0.45rem; font-size: 0.86rem; display: flex; align-items: center; gap: 0.5rem; text-align: left; border-radius: 8px; color: rgba(255,255,255,0.92); }
+    aside#sidebar .sidebar-section h3 { font-size: 0.78rem; margin-bottom: 0.16rem; color: rgba(255,255,255,0.62); font-weight:600; text-transform:uppercase; letter-spacing:0.6px; }
+    .sidebar-top h2 { font-size: 0.95rem; margin-bottom: 0.18rem; font-weight:700; letter-spacing:0.4px; color: rgba(255,255,255,0.96); }
+    aside#sidebar [data-lucide] { width: 24px; height: 24px; flex-shrink: 0; color: rgba(255,255,255,0.95); }
+    .tool-label { display: inline-block; line-height: 1.02; color: rgba(255,255,255,0.92); }
+    .tool-label .line-1 { display: block; font-weight: 600; font-size: 0.88rem; }
+    .tool-label .line-2 { display: block; font-size: 0.72rem; color: rgba(255,255,255,0.64); }
+    .sidebar-middle .sidebar-section button { margin-bottom: 0.06rem; padding-top: 0.14rem; padding-bottom: 0.14rem; }
+    .sidebar-section { padding: 0.18rem 0; border-top: 1px solid rgba(255,255,255,0.02); }
+    aside#sidebar button:hover { background: rgba(255,255,255,0.02); transform: translateX(2px); }
+    aside#sidebar button:focus { box-shadow: 0 0 0 3px rgba(37,99,235,0.12); outline: none; }
+    .sidebar-bottom { flex: 0 0 auto; }
+    /* Keep main content offset consistent with compact sidebar */
+    .sidebar-open #app-container main { margin-left: var(--sidebar-width); transition: margin-left 0.2s ease; }
+    </style>
+    <style>
+    /* Overall professional polish */
+    :root { --ui-surface: #0b1220; --ui-muted: #9aa4b2; --ui-accent: #2563eb; --card-bg: rgba(255,255,255,0.03); }
+    body { font-size: 14px; }
+    header .glass-effect { padding: 12px 16px; }
+    /* Chat container & bubbles */
+    #chat-container { padding: 18px; }
+    .markdown-content p { margin: 0.45rem 0; color: var(--ui-muted); }
+    .group .border { border-color: rgba(255,255,255,0.04) !important; }
+    /* fallback: target elements marked as surface-primary */
+    .group .surface-primary, .group .bg-surface-primary { background-color: rgba(8,10,14,0.6) !important; }
+    .chat-bubble { padding: 10px 12px; border-radius: 10px; line-height:1.3 }
+    .chat-bubble.user { background: linear-gradient(90deg, rgba(37,99,235,0.12), rgba(59,130,246,0.06)); border: 1px solid rgba(37,99,235,0.08); }
+    .chat-bubble.assistant { background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.02); }
+    /* Reduce footers & input size for compact look */
+    footer { padding: 10px; }
+    textarea#user-input { padding: 8px 40px 8px 12px; border-radius: 999px; font-size: 0.94rem; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.03); }
+    #send-button { padding: 8px; width: 40px; height: 40px; border-radius: 999px; }
+    /* Buttons and focus states */
+    button:focus { outline: 2px solid rgba(37,99,235,0.18); outline-offset: 2px; }
+    aside#sidebar button { transition: background-color 0.12s ease, transform 0.12s ease; }
+    /* Tidy icons alignment */
+    aside#sidebar i[data-lucide] { display: inline-flex; align-items: center; justify-content: center; }
+    /* Muted meta text */
+    .text-gray-400, .text-gray-300 { color: var(--ui-muted) !important; }
+    /* header minimal like ChatGPT/Gemini */
+    header h1#chat-title { font-size: 15px; font-weight:600; color: #e6eefc; }
+    header { padding: 10px 12px; }
+    /* Slightly reduce shadow for a flatter, modern look */
+    .shadow-2xl { box-shadow: 0 10px 30px rgba(2,6,23,0.55) !important; }
+    /* Chat bubble polish */
+    .chat-bubble { font-size: 0.95rem; color: var(--text-primary); }
+    .chat-bubble.user { background: linear-gradient(90deg, rgba(37,99,235,0.12), rgba(59,130,246,0.05)); border: 1px solid rgba(59,130,246,0.08); }
+    .chat-bubble.assistant { background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.02)); border: 1px solid rgba(255,255,255,0.03); }
+    .chat-bubble .markdown-content p { color: rgba(226,232,240,0.9); }
+    .chat-bubble .markdown-content a { color: var(--accent); text-decoration: underline; }
+    .avatar { width:36px; height:36px; border-radius:10px; display:inline-flex; align-items:center; justify-content:center; }
+    .user .avatar { background: linear-gradient(180deg,#1e40af,#3b82f6); }
+    .assistant .avatar { background: rgba(255,255,255,0.04); }
     </style>
 </head>
 <body class="antialiased">
 
+    
+
     <div id="app-container" class="h-screen w-screen flex flex-col md:flex-row animated-bg">
         <div id="sidebar-overlay" class="fixed inset-0 bg-black/60 z-30 hidden md:hidden transition-opacity duration-300"></div>
         
-        <aside id="sidebar" class="bg-black/30 h-full flex flex-col w-72 p-4 transition-transform duration-300 ease-in-out fixed inset-y-0 left-0 -translate-x-full md:relative md:translate-x-0 z-40">
-            <div class="flex items-center justify-between mb-4">
-                 <h2 class="text-xl font-bold tracking-wider">CHIMERA v7</h2>
-              <div class="flex items-center gap-2">
-                 <button id="multi-select-toggle" class="px-2 py-1 rounded-md bg-transparent hover:bg-white/10 text-sm">Select</button>
-                 <button id="sidebar-close" class="md:hidden p-1 rounded-full hover:bg-white/10 transition-colors"><i data-lucide="x"></i></button>
-              </div>
-            </div>
-            <button id="new-chat-btn" class="flex items-center justify-center gap-2 w-full p-2.5 rounded-lg bg-[var(--accent)] text-white font-semibold hover:bg-[var(--accent-hover)] transition-all duration-200 transform hover:scale-105 active:scale-100">
-                <i data-lucide="plus"></i> Obrolan Baru
-            </button>
-            <div id="bulk-action-bar" class="mt-3 hidden items-center gap-2">
-                <button id="bulk-delete-btn" class="px-2 py-1 rounded-md bg-red-600 text-white">Hapus</button>
-                <button id="bulk-export-btn" class="px-2 py-1 rounded-md bg-gray-600 text-white">Ekspor</button>
-                <button id="bulk-pin-btn" class="px-2 py-1 rounded-md bg-yellow-500 text-black">Pin/Unpin</button>
-                <button id="bulk-cancel-btn" class="px-2 py-1 rounded-md bg-transparent border border-[var(--border-primary)]">Batal</button>
-            </div>
-            <div id="conversation-history" class="mt-4 flex-1 overflow-y-auto pr-2 space-y-2"></div>
-            <div class="pt-4 border-t border-[var(--border-primary)] space-y-1">
-                <div class="mb-2">
-                    <input id="search-input" placeholder="Cari percakapan..." class="w-full p-2 rounded-md bg-transparent border border-[var(--border-primary)] focus:outline-none" />
+        <aside id="sidebar" class="bg-black/30 h-full flex flex-col" style="width:var(--sidebar-width); transition: transform 0.25s ease;" role="navigation" aria-label="Sidebar tools">
+            <div class="sidebar-inner h-full flex flex-col p-4">
+                <div class="sidebar-top">
+                    <div class="flex items-start justify-between mb-3">
+                        <div class="flex flex-col">
+                            <span class="text-2xl font-extrabold tracking-tight" style="letter-spacing:1px">CHIMERA</span>
+                            <span class="text-sm text-gray-400 mt-1">v1</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button id="multi-select-toggle" class="px-2 py-1 rounded-md bg-transparent hover:bg-white/10 text-sm">Select</button>
+                            <button id="sidebar-close" class="p-1 rounded-full hover:bg-white/10 transition-colors"><i data-lucide="x"></i></button>
+                        </div>
+                    </div>
+                    <button id="new-chat-btn" class="flex items-center justify-center gap-3 w-full px-4 py-2 rounded-xl bg-[var(--accent)] text-white font-semibold hover:bg-[var(--accent-hover)] transition-all duration-150">
+                        <i data-lucide="plus" class="w-5 h-5"></i><span class="text-sm">Obrolan Baru</span>
+                    </button>
+                    <div id="bulk-action-bar" class="mt-3 hidden items-center gap-2">
+                        <button id="bulk-delete-btn" class="px-2 py-1 rounded-md bg-red-600 text-white">Hapus</button>
+                        <button id="bulk-export-btn" class="px-2 py-1 rounded-md bg-gray-600 text-white">Ekspor</button>
+                        <button id="bulk-pin-btn" class="px-2 py-1 rounded-md bg-yellow-500 text-black">Pin/Unpin</button>
+                        <button id="bulk-cancel-btn" class="px-2 py-1 rounded-md bg-transparent border border-[var(--border-primary)]">Batal</button>
+                    </div>
                 </div>
-                <button id="fullscreen-btn" class="flex items-center gap-3 w-full p-2 rounded-lg hover:bg-white/10 transition-colors"><i data-lucide="maximize"></i> Layar Penuh</button>
-                <button id="api-key-button" class="flex items-center justify-between w-full p-2 rounded-lg hover:bg-white/10 transition-colors">
-                    <span class="flex items-center gap-3"><i data-lucide="key-round"></i> API Key</span>
-                    <span id="api-key-status" class="w-2.5 h-2.5 rounded-full transition-colors"></span>
-                </button>
-                <button id="settings-button" class="flex items-center gap-3 w-full p-2 rounded-lg hover:bg-white/10 transition-colors"><i data-lucide="settings"></i> Pengaturan</button>
-                <!-- New tools -->
-                <div class="mt-3 space-y-2">
-                    <h3 class="text-sm text-gray-400">Alat Tambahan</h3>
-                    <button id="deep-research-btn" class="flex items-center gap-3 w-full p-2 rounded-lg hover:bg-white/10 transition-colors"><i data-lucide="search"></i> Deep Research</button>
-                    <button id="learning-btn" class="flex items-center gap-3 w-full p-2 rounded-lg hover:bg-white/10 transition-colors"><i data-lucide="book-open"></i> Pembelajaran Terpadu</button>
-                    <button id="canva-btn" class="flex items-center gap-3 w-full p-2 rounded-lg hover:bg-white/10 transition-colors"><i data-lucide="edit-3"></i> Canva (Editor & Preview)</button>
+
+                <div class="sidebar-middle mt-3 flex-1 overflow-y-auto">
+                    <div id="conversation-history" class="space-y-2"></div>
+                    <div class="mt-4 p-2">
+                        <input id="search-input" placeholder="Cari percakapan..." class="w-full p-2 rounded-md bg-transparent border border-[var(--border-primary)] focus:outline-none" />
+                    </div>
+
+                    <div class="mt-2 space-y-2 sidebar-section px-2">
+                        <button id="fullscreen-btn" class="flex items-center gap-3 w-full p-2 rounded-lg hover:bg-white/10 transition-colors"><i data-lucide="maximize"></i> Layar Penuh</button>
+                        <button id="api-key-button" class="flex items-center justify-between w-full p-2 rounded-lg hover:bg-white/10 transition-colors"><span class="flex items-center gap-3"><i data-lucide="key-round"></i> API Key</span><span id="api-key-status" class="w-2.5 h-2.5 rounded-full transition-colors"></span></button>
+                        <button id="settings-button" class="flex items-center gap-3 w-full p-2 rounded-lg hover:bg-white/10 transition-colors"><i data-lucide="settings"></i> Pengaturan</button>
+                    </div>
+
+                    <div class="mt-3 space-y-2 sidebar-section px-2">
+                        <h3 class="text-sm text-gray-400">Alat Tambahan</h3>
+                        <button id="deep-research-btn" class="flex items-center gap-3 w-full p-2 rounded-lg hover:bg-white/10 transition-colors"><i data-lucide="search"></i><span class="tool-label"><span class="line-1">Deep Research</span></span></button>
+                        <button id="learning-btn" class="flex items-center gap-3 w-full p-2 rounded-lg hover:bg-white/10 transition-colors"><i data-lucide="book-open"></i><span class="tool-label"><span class="line-1">Pembelajaran</span><span class="line-2">Terpadu</span></span></button>
+                        <button id="canva-btn" class="flex items-center gap-3 w-full p-2 rounded-lg hover:bg-white/10 transition-colors"><i data-lucide="edit-3"></i><span class="tool-label"><span class="line-1">Canva</span><span class="line-2">Editor & Preview</span></span></button>
+                        <button id="plugin-store-btn" class="flex items-center gap-3 w-full p-2 rounded-lg hover:bg-white/10 transition-colors"><i data-lucide="box" ></i><span class="tool-label"><span class="line-1">Plugin Store</span></span></button>
+                        <button id="collab-share-btn" class="flex items-center gap-3 w-full p-2 rounded-lg hover:bg-white/10 transition-colors"><i data-lucide="share-2"></i><span class="tool-label"><span class="line-1">Share /</span><span class="line-2">Kolaborasi</span></span></button>
+                        <button id="dashboard-switch-btn" class="flex items-center gap-3 w-full p-2 rounded-lg hover:bg-white/10 transition-colors"><i data-lucide="layout-dashboard"></i><span class="tool-label"><span class="line-1">Switch to</span><span class="line-2">Dashboard</span></span></button>
+                        <button id="workflow-btn" class="flex items-center gap-3 w-full p-2 rounded-lg hover:bg-white/10 transition-colors"><i data-lucide="layers"></i><span class="tool-label"><span class="line-1">Workflow</span><span class="line-2">Builder</span></span></button>
+                        <button id="templates-btn" class="flex items-center gap-3 w-full p-2 rounded-lg hover:bg-white/10 transition-colors"><i data-lucide="grid"></i><span class="tool-label"><span class="line-1">Template</span><span class="line-2">Library</span></span></button>
+                        <button id="badges-btn" class="flex items-center gap-3 w-full p-2 rounded-lg hover:bg-white/10 transition-colors"><i data-lucide="award"></i><span class="tool-label"><span class="line-1">Badges</span></span> <span id="badge-count" class="ml-auto text-xs text-yellow-300"></span></button>
+                    </div>
                 </div>
-                <button id="theme-toggle" class="flex items-center gap-3 w-full p-2 rounded-lg hover:bg-white/10 transition-colors"><i data-lucide="sun"></i> <span id="theme-text">Mode Terang</span></button>
+
+                <div class="sidebar-bottom pt-4 border-t border-[var(--border-primary)]">
+                    <div class="p-2">
+                        <label class="flex items-center gap-2 text-sm"> <input type="checkbox" id="memory-toggle-input" class="h-4 w-4"> <span>Aktifkan Memori AI</span></label>
+                    </div>
+                    <div class="p-2">
+                        <button id="theme-toggle" class="flex items-center gap-3 w-full p-2 rounded-lg hover:bg-white/10 transition-colors"><i data-lucide="sun"></i> <span id="theme-text">Mode Terang</span></button>
+                    </div>
+                </div>
             </div>
         </aside>
 
@@ -220,12 +344,28 @@
         // --- SETUP & INITIALIZATION ---
 
         function setupDOM() {
-            const ids = ['app-container', 'sidebar', 'sidebar-toggle', 'sidebar-close', 'sidebar-overlay', 'chat-container', 'user-input', 'send-button', 'mic-btn', 'new-chat-btn', 'conversation-history', 'fullscreen-btn', 'api-key-button', 'api-key-status', 'settings-button', 'theme-toggle', 'theme-text', 'image-upload-input', 'image-preview-container', 'stop-generation-container', 'stop-generation-btn', 'modal-backdrop', 'toast-container', 'chat-title', 'search-input', 'deep-research-btn', 'learning-btn', 'canva-btn'];
+            const ids = ['app-container', 'sidebar', 'sidebar-toggle', 'sidebar-close', 'sidebar-overlay', 'chat-container', 'user-input', 'send-button', 'mic-btn', 'new-chat-btn', 'conversation-history', 'fullscreen-btn', 'api-key-button', 'api-key-status', 'settings-button', 'theme-toggle', 'theme-text', 'image-upload-input', 'image-preview-container', 'stop-generation-container', 'stop-generation-btn', 'modal-backdrop', 'toast-container', 'chat-title', 'search-input', 'deep-research-btn', 'learning-btn', 'canva-btn', 'plugin-store-btn', 'collab-share-btn', 'dashboard-switch-btn', 'workflow-btn', 'templates-btn', 'badges-btn', 'badge-count', 'multi-select-toggle', 'bulk-action-bar', 'bulk-delete-btn', 'bulk-export-btn', 'bulk-pin-btn', 'bulk-cancel-btn', 'export-single-chat-btn'];
             ids.forEach(id => {
                 const camelCaseId = id.replace(/-(\w)/g, (_, c) => c.toUpperCase());
                 dom[camelCaseId] = document.getElementById(id);
             });
+            // accessibility: ensure fullscreen button has ARIA attributes
+            try {
+                if (dom.fullscreenBtn) {
+                    dom.fullscreenBtn.setAttribute('role', 'button');
+                    dom.fullscreenBtn.setAttribute('aria-pressed', 'false');
+                    dom.fullscreenBtn.setAttribute('aria-label', 'Toggle fullscreen');
+                }
+            } catch(e) { /* ignore */ }
+            // ...existing code...
         }
+
+        // close sidebar on Escape key for accessibility (kept)
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                try { if (!dom.sidebar.classList.contains('-translate-x-full')) { closeSidebar(); document.documentElement.classList.remove('sidebar-open'); } } catch(e){}
+            }
+        });
 
         function initState() {
             try {
@@ -347,35 +487,32 @@
             });
             sortedConversations.forEach(conv => {
                 const isActive = conv.id === state.activeConversationId;
-                const el = document.createElement('div');
-                el.className = `flex items-center justify-between p-2 rounded-lg cursor-pointer group transition-all duration-200 ${isActive ? 'bg-blue-600/30' : 'hover:bg-white/10'}`;
-                el.dataset.id = conv.id;
-                const checked = state.selectedConversations[conv.id] ? 'checked' : '';
-                const checkboxHTML = state.multiSelectActive ? `<input type="checkbox" class="conv-select-checkbox mr-2" data-id="${conv.id}" ${checked}/>` : '';
-                el.innerHTML = `<div class="flex items-center gap-2">${checkboxHTML}<button class="pin-chat-btn p-1 text-gray-400 hover:text-white" title="Pin percakapan">${conv.pinned?'<i data-lucide="pin" class="w-4 h-4 text-yellow-300"></i>':'<i data-lucide="circle" class="w-3 h-3"></i>'}</button><span class="truncate flex-1 pr-2">${conv.title}</span></div><div class="flex gap-1 items-center"><button class="delete-chat-btn opacity-0 group-hover:opacity-100 text-gray-400 hover:text-white transition-opacity p-1"><i data-lucide="trash-2" class="w-4 h-4"></i></button></div>`;
-                
-                el.addEventListener('click', (e) => {
-                    if (state.multiSelectActive && e.target.closest('.conv-select-checkbox')) {
-                        return; // checkbox handled separately
-                    }
-                    if (e.target.closest('.delete-chat-btn')) {
-                        e.stopPropagation();
-                        showCustomConfirm('Hapus percakapan?', `Anda yakin ingin menghapus "${conv.title}"? Aksi ini tidak dapat dibatalkan.`, () => {
-                            delete state.conversations[conv.id];
-                            if (state.activeConversationId === conv.id) {
-                                const nextId = Object.keys(state.conversations)[0] || null;
-                                if (nextId) setActiveConversation(nextId);
-                                else createNewConversation();
-                            }
-                            saveAllData();
-                            loadConversations();
-                        });
-                        return;
-                    }
+                const wrapper = document.createElement('div'); wrapper.className = 'conversation-list-item';
+                const pill = document.createElement('div');
+                pill.className = `conv-pill cursor-pointer transition-all duration-150 ${isActive ? 'active' : ''}`;
+                pill.dataset.id = conv.id;
+                // left radio and title
+                const radio = document.createElement('span'); radio.className = 'conv-radio';
+                const titleWrap = document.createElement('div'); titleWrap.style.flex = '1';
+                const titleEl = document.createElement('div'); titleEl.className = 'title truncate'; titleEl.textContent = conv.title || 'Percakapan';
+                const subEl = document.createElement('div'); subEl.className = 'subtitle'; subEl.textContent = (conv.history && conv.history[conv.history.length-1] && (conv.history[conv.history.length-1].parts||[])[0]?.text?.slice(0,40)) || '';
+                titleWrap.appendChild(titleEl); if (subEl.textContent) titleWrap.appendChild(subEl);
+                const actions = document.createElement('div'); actions.className = 'flex items-center gap-2';
+                const del = document.createElement('button'); del.className = 'delete-chat-btn text-gray-400 hover:text-white p-1'; del.title='Hapus percakapan'; del.innerHTML = `<i data-lucide="trash-2" class="w-4 h-4"></i>`;
+                const pin = document.createElement('button'); pin.className = 'pin-chat-btn text-gray-400 hover:text-white p-1'; pin.title='Pin percakapan'; pin.innerHTML = conv.pinned?'<i data-lucide="pin" class="w-4 h-4 text-yellow-300"></i>':'<i data-lucide="circle" class="w-3 h-3"></i>';
+                actions.appendChild(pin); actions.appendChild(del);
+
+                pill.appendChild(radio); pill.appendChild(titleWrap); pill.appendChild(actions);
+
+                // event handling
+                pill.addEventListener('click', (e) => {
+                    if (e.target.closest('.delete-chat-btn')) { e.stopPropagation(); showCustomConfirm('Hapus percakapan?', `Anda yakin ingin menghapus "${conv.title}"?`, () => { delete state.conversations[conv.id]; saveAllData(); loadConversations(); }); return; }
                     if (e.target.closest('.pin-chat-btn')) { e.stopPropagation(); togglePinConversation(conv.id); return; }
                     if (!state.multiSelectActive) setActiveConversation(conv.id);
                 });
-                dom.conversationHistory.appendChild(el);
+
+                wrapper.appendChild(pill);
+                dom.conversationHistory.appendChild(wrapper);
             });
             lucide.createIcons();
         }
@@ -547,14 +684,39 @@
         // --- MODALS & TOASTS ---
 
         function showModal(contentHTML, size = 'max-w-md') {
-            dom.modalBackdrop.innerHTML = `<div class="bg-[var(--surface-primary)] border border-[var(--border-primary)] w-full ${size} rounded-2xl shadow-2xl scale-in flex flex-col max-h-[90vh]">${contentHTML}</div>`;
+            // create a wrapper inside the backdrop so clicks on the backdrop element (dom.modalBackdrop)
+            // are distinguishable from clicks inside the modal content.
+            dom.modalBackdrop.innerHTML = `
+                <div id="modal-content-wrapper" class="w-full flex items-center justify-center p-4">
+                    <div class="bg-[var(--surface-primary)] border border-[var(--border-primary)] w-full ${size} rounded-2xl shadow-2xl scale-in flex flex-col max-h-[90vh] overflow-auto">${contentHTML}</div>
+                </div>`;
             dom.modalBackdrop.classList.remove('opacity-0', 'pointer-events-none');
+            // Ensure the wrapper receives focus and pointer events so inner controls are interactive
+            try {
+                const wrapper = dom.modalBackdrop.querySelector('#modal-content-wrapper');
+                if (wrapper) {
+                    wrapper.addEventListener('click', (ev) => { ev.stopPropagation(); });
+                    wrapper.setAttribute('tabindex', '-1');
+                    wrapper.style.pointerEvents = 'auto';
+                    // focus after a tick to ensure rendering
+                    setTimeout(() => { try { wrapper.focus(); } catch(e){} }, 30);
+                }
+            } catch(e){ console.warn('showModal focus failed', e); }
+            // clear any inline pointer-events on the backdrop (some routines set this to 'none')
+            try { dom.modalBackdrop.style.pointerEvents = 'auto'; } catch(e){}
+            // mark backdrop as having a modal (useful for other logic)
+            dom.modalBackdrop.dataset.modalOpen = '1';
         }
 
         function hideModal() {
-            const modalContent = dom.modalBackdrop.querySelector('div[class*="max-w-"]');
-            if (modalContent) modalContent.classList.remove('scale-in');
+            const wrapper = dom.modalBackdrop.querySelector('#modal-content-wrapper');
+            if (wrapper) {
+                const inner = wrapper.querySelector('div[class*="max-w-"]'); if (inner) inner.classList.remove('scale-in');
+                try { dom.modalBackdrop.removeChild(wrapper); } catch(e) { dom.modalBackdrop.innerHTML = ''; }
+            }
             dom.modalBackdrop.classList.add('opacity-0', 'pointer-events-none');
+            try { dom.modalBackdrop.style.pointerEvents = 'none'; } catch(e){}
+            delete dom.modalBackdrop.dataset.modalOpen;
         }
         
         function showApiKeyModal() {
@@ -654,29 +816,102 @@
             const content = `
                 <div class="p-6">
                     <h2 class="text-xl font-bold mb-2">Deep Research</h2>
-                    <p class="text-sm text-gray-400 mb-4">Tool ini membantu membuat ringkasan riset mendalam. Masukkan query atau unggah referensi (PDF/URL) dan pilih cakupan (sekilas / detail / kutipan lengkap).</p>
+                    <p class="text-sm text-gray-400 mb-4">Tool ini membantu membuat ringkasan riset mendalam. Pilih sumber, tingkat kedalaman, lalu jalankan. (Prototype — sambungkan API pencarian/academic untuk hasil nyata.)</p>
                     <input id="deep-query" class="w-full p-2 border border-[var(--border-primary)] rounded-md bg-[var(--bg-primary)]" placeholder="Masukkan topik riset..." />
-                    <div class="mt-3 flex gap-2">
-                        <select id="deep-scope" class="p-2 border border-[var(--border-primary)] rounded-md bg-[var(--bg-primary)]">
-                            <option value="overview">Sekilas</option>
-                            <option value="detailed">Detail</option>
-                            <option value="citations">Dengan Kutipan</option>
-                        </select>
-                        <button id="deep-run" class="px-3 py-2 bg-blue-600 text-white rounded-md">Jalankan</button>
+                    <div class="mt-3 flex gap-2 items-center">
+                        <div class="flex gap-2 items-center">
+                            <label class="text-sm"><input type="checkbox" id="src-web" checked /> Web</label>
+                            <label class="text-sm"><input type="checkbox" id="src-scholarly" /> Scholarly</label>
+                            <label class="text-sm"><input type="checkbox" id="src-pdf" /> PDF</label>
+                        </div>
+                        <div class="ml-auto flex items-center gap-2">
+                            <label class="text-sm">Kedalaman</label>
+                            <select id="deep-scope" class="p-2 border border-[var(--border-primary)] rounded-md bg-[var(--bg-primary)]">
+                                <option value="overview">Sekilas</option>
+                                <option value="detailed">Detail</option>
+                                <option value="citations">Dengan Kutipan</option>
+                            </select>
+                            <button id="deep-run" class="px-3 py-2 bg-blue-600 text-white rounded-md">Jalankan</button>
+                        </div>
                     </div>
-                    <div id="deep-results" class="mt-4 max-h-60 overflow-auto"></div>
+                    <div class="mt-4 flex gap-2">
+                        <button id="deep-insert-chat" class="px-3 py-2 bg-green-600 text-white rounded-md">Masukkan ke Chat</button>
+                        <button id="deep-new-conv" class="px-3 py-2 bg-indigo-600 text-white rounded-md">Buat Percakapan Baru</button>
+                        <button id="deep-export" class="px-3 py-2 bg-gray-600 text-white rounded-md ml-auto">Ekspor Hasil</button>
+                    </div>
+                    <div id="deep-progress" class="mt-3 w-full bg-white/5 rounded-full h-2 overflow-hidden"><div id="deep-progress-bar" style="width:0%" class="h-full bg-[var(--accent)]"></div></div>
+                    <div id="deep-results" class="mt-4 max-h-64 overflow-auto"></div>
                 </div>
             `;
-            showModal(content, 'max-w-2xl');
+            showModal(content, 'max-w-3xl');
+            lucide.createIcons();
+
+            // streaming simulation and basic source list shape
+            let streamTimer = null;
             document.getElementById('deep-run').addEventListener('click', async () => {
+                console.log('deep-run clicked');
                 const q = document.getElementById('deep-query').value.trim();
                 const scope = document.getElementById('deep-scope').value;
+                const useWeb = document.getElementById('src-web').checked;
+                const useSch = document.getElementById('src-scholarly').checked;
+                const usePdf = document.getElementById('src-pdf').checked;
                 if (!q) return showToast('Masukkan query riset terlebih dahulu', 'warning');
-                const resEl = document.getElementById('deep-results'); resEl.innerHTML = '<em>Mencari dan merangkum...</em>';
-                // Placeholder: simulate research pipeline (real implementation would call external tools/APIs)
-                setTimeout(() => {
-                    resEl.innerHTML = `<div class="p-3 bg-[var(--surface-primary)] rounded-md"><strong>Ringkasan (${scope}):</strong><p class="mt-2">Hasil ringkasan cepat untuk <em>${escapeHtml(q)}</em>. (Prototype — integrasikan Google Search / scholarly APIs untuk hasil nyata.)</p></div>`;
-                }, 800);
+                const resEl = document.getElementById('deep-results'); resEl.innerHTML = '';
+                const progressBar = document.getElementById('deep-progress-bar'); progressBar.style.width = '0%';
+
+                // Simulate streaming chunks like Gemini: show interim snippets, then finalize
+                const simulatedSources = [];
+                if (useWeb) simulatedSources.push({ source: 'Example News', url: 'https://example.com/article', snippet: `Ringkasan cepat tentang ${q} dari web...` });
+                if (useSch) simulatedSources.push({ source: 'Journal X', url: 'https://doi.org/10.0000/example', snippet: `Ringkasan singkat dari artikel ilmiah tentang ${q}...` });
+                if (usePdf) simulatedSources.push({ source: 'PDF Reference', url: 'file.pdf', snippet: `Kutipan dari PDF yang relevan tentang ${q}...` });
+
+                // progressive reveal
+                let step = 0; const steps = 5 + simulatedSources.length;
+                streamTimer && clearInterval(streamTimer);
+                streamTimer = setInterval(() => {
+                    step++;
+                    const pct = Math.min(100, Math.round((step / steps) * 100)); progressBar.style.width = pct + '%';
+                    if (step <= 3) {
+                        const p = document.createElement('div'); p.className = 'p-3 bg-[var(--surface-primary)] rounded-md mb-2'; p.innerHTML = `<strong>Streaming:</strong> <div class="text-sm text-gray-300">Mengumpulkan bukti untuk <em>${escapeHtml(q)}</em>...</div>`;
+                        resEl.appendChild(p);
+                    } else if (step - 3 <= simulatedSources.length) {
+                        const src = simulatedSources[step - 4];
+                        const item = document.createElement('div'); item.className = 'p-3 bg-[var(--surface-primary)] rounded-md mb-2';
+                        item.innerHTML = `<div class="text-sm text-gray-300"><strong>${escapeHtml(src.source)}</strong> — <a href="${escapeHtml(src.url)}" target="_blank" rel="noreferrer" class="text-blue-300 underline">${escapeHtml(src.url)}</a><div class="mt-1">${escapeHtml(src.snippet)}</div></div>`;
+                        resEl.appendChild(item);
+                    } else {
+                        // final summary
+                        const final = document.createElement('div'); final.className = 'p-3 bg-[var(--surface-primary)] rounded-md mb-2';
+                        final.innerHTML = `<strong>Ringkasan (${escapeHtml(scope)}):</strong><p class="mt-2 text-sm text-gray-300">Hasil ringkasan gabungan untuk <em>${escapeHtml(q)}</em>. (Ini adalah prototipe; sambungkan real search API untuk hasil nyata.)</p>`;
+                        resEl.appendChild(final);
+                        clearInterval(streamTimer);
+                    }
+                    resEl.scrollTop = resEl.scrollHeight;
+                }, 350);
+            });
+
+            document.getElementById('deep-export').addEventListener('click', () => {
+                console.log('deep-export clicked');
+                const res = document.getElementById('deep-results').innerText || '';
+                const blob = new Blob([res], { type: 'text/plain' }); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = `deep-research-${Date.now()}.txt`; a.click(); URL.revokeObjectURL(url); showToast('Hasil diekspor');
+            });
+
+            document.getElementById('deep-insert-chat').addEventListener('click', () => {
+                console.log('deep-insert-chat clicked');
+                const text = document.getElementById('deep-results').innerText || '';
+                if (!text) return showToast('Jalankan penelitian terlebih dahulu', 'warning');
+                // append as assistant response into current conversation
+                const conv = state.conversations[state.activeConversationId];
+                conv.history.push({ role: 'model', parts: [{ text: `Deep Research Results:\n\n${text}` }] });
+                saveAllData(); hideModal(); renderConversation(state.activeConversationId); showToast('Hasil dimasukkan ke percakapan');
+            });
+
+            document.getElementById('deep-new-conv').addEventListener('click', () => {
+                const text = document.getElementById('deep-results').innerText || '';
+                if (!text) return showToast('Jalankan penelitian terlebih dahulu', 'warning');
+                createNewConversation(); const conv = state.conversations[state.activeConversationId];
+                conv.history.push({ role: 'model', parts: [{ text: `Deep Research Results:\n\n${text}` }] });
+                saveAllData(); hideModal(); renderConversation(state.activeConversationId); showToast('Percakapan baru dibuat dengan hasil riset');
             });
         }
 
@@ -693,21 +928,59 @@
                     <p class="text-sm text-gray-400 mb-4">Buat modul pembelajaran interaktif: masukkan topik, tujuan belajar, dan tingkat kesulitan. Sistem akan membuat ringkasan, kuis singkat, dan bahan latihan.</p>
                     <input id="learn-topic" class="w-full p-2 border border-[var(--border-primary)] rounded-md bg-[var(--bg-primary)]" placeholder="Topik (contoh: Persamaan Maxwell)" />
                     <div class="mt-3 flex gap-2">
-                        <input id="learn-level" placeholder="Tingkat (pemula/menengah/lanjutan)" class="p-2 border border-[var(--border-primary)] rounded-md bg-[var(--bg-primary)]" />
+                        <select id="learn-level" class="p-2 border border-[var(--border-primary)] rounded-md bg-[var(--bg-primary)]">
+                            <option value="pemula">Pemula</option>
+                            <option value="menengah">Menengah</option>
+                            <option value="lanjutan">Lanjutan</option>
+                        </select>
                         <button id="learn-run" class="px-3 py-2 bg-blue-600 text-white rounded-md">Buat Modul</button>
+                        <button id="learn-quiz" class="px-3 py-2 bg-green-600 text-white rounded-md">Buat Kuis</button>
+                        <button id="learn-insert" class="px-3 py-2 bg-indigo-600 text-white rounded-md ml-auto">Masukkan ke Chat</button>
                     </div>
-                    <div id="learn-results" class="mt-4 max-h-60 overflow-auto"></div>
+                    <div id="learn-results" class="mt-4 max-h-64 overflow-auto"></div>
                 </div>
             `;
-            showModal(content, 'max-w-2xl');
+            showModal(content, 'max-w-3xl');
+            lucide.createIcons();
+
             document.getElementById('learn-run').addEventListener('click', () => {
+                console.log('learn-run clicked');
                 const topic = document.getElementById('learn-topic').value.trim();
-                const level = document.getElementById('learn-level').value.trim() || 'pemula';
+                const level = document.getElementById('learn-level').value;
                 if (!topic) return showToast('Masukkan topik pembelajaran', 'warning');
-                const out = document.getElementById('learn-results'); out.innerHTML = '<em>Menghasilkan modul...</em>';
+                const out = document.getElementById('learn-results'); out.innerHTML = '<em>Menghasilkan modul pembelajaran...</em>';
                 setTimeout(() => {
-                    out.innerHTML = `<div class="p-3 bg-[var(--surface-primary)] rounded-md"><h3 class="font-semibold">Modul singkat: ${escapeHtml(topic)}</h3><p>Tingkat: ${escapeHtml(level)}</p><ol class="mt-2"><li>Pengenalan singkat</li><li>Penjelasan konsep inti</li><li>Contoh latihan</li><li>Kuis singkat (3 soal)</li></ol></div>`;
-                }, 600);
+                    const moduleHtml = `
+                        <div class="p-3 bg-[var(--surface-primary)] rounded-md">
+                            <h3 class="font-semibold">Modul: ${escapeHtml(topic)}</h3>
+                            <div class="text-sm text-gray-300">Tingkat: ${escapeHtml(level)}</div>
+                            <h4 class="mt-3 font-semibold">Tujuan Pembelajaran</h4>
+                            <ul class="list-decimal ml-5 mt-2 text-sm"><li>Memahami konsep dasar ${escapeHtml(topic)}</li><li>Mampu menerapkan konsep pada contoh sederhana</li></ul>
+                            <h4 class="mt-3 font-semibold">Materi Inti</h4>
+                            <ol class="mt-2 list-decimal ml-5 text-sm"><li>Pengenalan dan konteks</li><li>Prinsip dasar dan rumus penting</li><li>Contoh dan latihan</li></ol>
+                            <h4 class="mt-3 font-semibold">Latihan</h4>
+                            <ol class="mt-2 list-decimal ml-5 text-sm"><li>Soal latihan 1 (jawaban: ...)</li><li>Soal latihan 2 (jawaban: ...)</li></ol>
+                        </div>`;
+                    out.innerHTML = moduleHtml;
+                }, 700);
+            });
+
+            document.getElementById('learn-quiz').addEventListener('click', () => {
+                console.log('learn-quiz clicked');
+                const topic = document.getElementById('learn-topic').value.trim();
+                if (!topic) return showToast('Masukkan topik terlebih dahulu', 'warning');
+                const out = document.getElementById('learn-results');
+                const quizHtml = `<div class="p-3 bg-[var(--surface-primary)] rounded-md"><h4 class="font-semibold">Kuis Singkat untuk ${escapeHtml(topic)}</h4><ol class="mt-2 list-decimal ml-5 text-sm"><li>Apa definisi utama dari ${escapeHtml(topic)}? (Jawaban singkat)</li><li>Sebutkan satu aplikasi nyata dari ${escapeHtml(topic)}.</li><li>Soal pilihan ganda: Pilih pernyataan yang benar tentang ${escapeHtml(topic)}.</li></ol></div>`;
+                out.innerHTML = quizHtml;
+            });
+
+            document.getElementById('learn-insert').addEventListener('click', () => {
+                console.log('learn-insert clicked');
+                const text = document.getElementById('learn-results').innerText || '';
+                if (!text) return showToast('Buat modul dulu sebelum memasukkan', 'warning');
+                const conv = state.conversations[state.activeConversationId];
+                conv.history.push({ role: 'model', parts: [{ text: `Pembelajaran Terpadu:\n\n${text}` }] });
+                saveAllData(); hideModal(); renderConversation(state.activeConversationId); showToast('Modul dimasukkan ke percakapan');
             });
         }
 
@@ -724,37 +997,250 @@
                 <div class="p-4 flex flex-col gap-3 h-[70vh]">
                     <h2 class="text-xl font-bold">Canva - Editor & Preview</h2>
                     <div class="flex gap-2 h-full">
-                        <div class="w-1/2 h-full border border-[var(--border-primary)] rounded-md p-1 bg-[var(--bg-primary)]">
-                            <div id="ace-editor" style="height:100%; width:100%;"></div>
+                        <div class="w-1/2 h-full border border-[var(--border-primary)] rounded-md p-1 bg-[var(--bg-primary)] flex flex-col">
+                            <div class="flex items-center gap-2 mb-2">
+                                <select id="canva-templates" class="p-2 border border-[var(--border-primary)] rounded-md bg-[var(--bg-primary)]">
+                                    <option value="tpl_hero">Template - Hero Banner</option>
+                                    <option value="tpl_card">Template - Card</option>
+                                    <option value="tpl_poster">Template - Poster</option>
+                                </select>
+                                <input id="canva-image-input" type="file" accept="image/*" class="text-sm" />
+                                <button id="canva-insert-image" class="px-2 py-1 bg-green-600 text-white rounded-md">Masukkan Gambar</button>
+                            </div>
+                            <div class="flex-1" id="ace-wrapper"><div id="ace-editor" style="height:100%; width:100%;"></div></div>
                         </div>
                         <div class="w-1/2 h-full border border-[var(--border-primary)] rounded-md p-3 bg-[var(--surface-primary)] overflow-auto" id="canva-preview"></div>
                     </div>
                     <div class="flex justify-end gap-2">
                         <button id="canva-run" class="px-3 py-2 bg-blue-600 text-white rounded-md">Render Preview</button>
+                        <button id="canva-export-pdf" class="px-3 py-2 bg-indigo-600 text-white rounded-md">Export PDF</button>
                         <button id="canva-close" class="px-3 py-2 bg-transparent border border-[var(--border-primary)] rounded-md">Tutup</button>
                     </div>
                 </div>
             `;
-            showModal(content, 'max-w-4xl');
-            // initialize ACE
+            showModal(content, 'max-w-5xl');
+            lucide.createIcons();
+            // initialize ACE and wire template + upload handlers
             setTimeout(() => {
                 try {
                     if (typeof ace === 'undefined') { showToast('Editor ACE belum dimuat. Pastikan koneksi internet atau muat ulang halaman.', 'error'); return; }
                     const editor = ace.edit('ace-editor');
                     editor.setTheme('ace/theme/monokai');
                     editor.session.setMode('ace/mode/html');
-                    editor.setValue('<div class="p-4"><h2>Judul</h2><p>Preview konten...</p></div>', -1);
-                    // hook buttons
+                    // simple templates
+                    const templates = {
+                        tpl_hero: `<div style="padding:40px;background:#0f172a;color:#fff"><h1 style="font-size:36px">Judul Besar</h1><p>Subjudul ringkas di sini.</p></div>`,
+                        tpl_card: `<div style="padding:16px;border-radius:8px;background:#fff;color:#0f172a;width:300px"><h3>Judul Kartu</h3><p>Deskripsi singkat.</p></div>`,
+                        tpl_poster: `<div style="padding:30px;background:#1f2937;color:#fff"><h2>Poster Event</h2><p>Detail acara dan tanggal.</p></div>`
+                    };
+                    const tplSel = document.getElementById('canva-templates');
+                    tplSel.addEventListener('change', () => { editor.setValue(templates[tplSel.value] || '', -1); });
+                    // set initial template
+                    editor.setValue(templates[tplSel.value] || '', -1);
+
                     document.getElementById('canva-run').addEventListener('click', () => {
+                        console.log('canva-run clicked');
                         const html = editor.getValue();
                         let sanitized = html;
                         try { sanitized = window.DOMPurify ? DOMPurify.sanitize(html) : html; } catch(e) { console.warn('DOMPurify sanitize failed', e); }
                         document.getElementById('canva-preview').innerHTML = sanitized;
+                        lucide.createIcons();
                     });
-                    document.getElementById('canva-close').addEventListener('click', hideModal);
+
+                    document.getElementById('canva-close').addEventListener('click', () => { console.log('canva-close clicked'); hideModal(); });
+
+                    document.getElementById('canva-export-pdf').addEventListener('click', () => {
+                        console.log('canva-export-pdf clicked');
+                        const preview = document.getElementById('canva-preview');
+                        if (!preview || preview.innerHTML.trim() === '') return showToast('Render preview terlebih dahulu', 'warning');
+                        const container = document.createElement('div'); container.style.padding = '20px'; container.innerHTML = preview.innerHTML;
+                        const opt = { margin:10, filename: sanitizeFilename('canva-export') + '.pdf', image:{type:'jpeg',quality:0.98}, html2canvas:{scale:2}, jsPDF:{unit:'mm',format:'a4'} };
+                        showToast('Membuat PDF...','warning'); hideModal(); setTimeout(()=> html2pdf().set(opt).from(container).save().then(()=> showToast('PDF dibuat')) ,50);
+                    });
+
+                    // image insert (reads file and inserts an <img> tag into editor)
+                    const imgInput = document.getElementById('canva-image-input');
+                    document.getElementById('canva-insert-image').addEventListener('click', async () => {
+                        const file = imgInput.files && imgInput.files[0];
+                        if (!file) return showToast('Pilih gambar terlebih dahulu', 'warning');
+                        try {
+                            const b64 = await fileToBase64(file);
+                            const imgTag = `<img src="data:${file.type};base64,${b64}" style="max-width:100%;height:auto"/>`;
+                            editor.session.insert({row: editor.session.getLength(), column:0}, '\n' + imgTag + '\n');
+                            showToast('Gambar dimasukkan ke editor');
+                        } catch(e) { console.error('insert image', e); showToast('Gagal memasukkan gambar', 'error'); }
+                    });
                 } catch(e) { console.error('ACE init error', e); showToast('Gagal inisialisasi editor', 'error'); }
-            }, 120);
+            }, 150);
         }
+
+        // --- PLUGIN SYSTEM ---
+        const plugins = { active: {}, registry: {} };
+
+        function openPluginStore() {
+            let list = '';
+            // show registered plugins (local registry)
+            Object.keys(plugins.registry).forEach(key => {
+                const p = plugins.registry[key];
+                list += `<div class="p-3 border rounded-md mb-2 flex items-center justify-between"><div><strong>${escapeHtml(p.name)}</strong><div class="text-sm text-gray-400">${escapeHtml(p.description||'')}</div></div><div><button data-id="${key}" class="plugin-toggle px-3 py-1 rounded-md ${plugins.active[key] ? 'bg-red-600' : 'bg-green-600'} text-white">${plugins.active[key] ? 'Nonaktifkan' : 'Aktifkan'}</button></div></div>`;
+            });
+            showModal(`<div class="p-4 max-h-[60vh] overflow-auto"><h3 class="text-lg font-semibold mb-3">Plugin Store</h3>${list || '<div class="text-sm text-gray-400">Belum ada plugin terdaftar.</div>'}</div>`,'max-w-lg');
+            // delegate toggle
+            document.querySelectorAll('.plugin-toggle').forEach(btn => btn.addEventListener('click', async (e) => {
+                const id = e.currentTarget.dataset.id; if (plugins.active[id]) { deactivatePlugin(id); } else { await activatePlugin(id); }
+                hideModal(); openPluginStore();
+            }));
+        }
+
+        async function activatePlugin(id) {
+            const p = plugins.registry[id]; if (!p) return showToast('Plugin tidak ditemukan', 'error');
+            try {
+                if (p.url) {
+                    // dynamic script load
+                    await loadScript(p.url);
+                }
+                plugins.active[id] = true;
+                localStorage.setItem('chimera_plugins', JSON.stringify(plugins.active));
+                showToast(`${p.name} diaktifkan`,'success');
+            } catch(e) { console.error('activatePlugin', e); showToast('Gagal mengaktifkan plugin','error'); }
+        }
+
+        function deactivatePlugin(id) { delete plugins.active[id]; localStorage.setItem('chimera_plugins', JSON.stringify(plugins.active)); showToast('Plugin dinonaktifkan'); }
+
+        function registerPlugin(id, meta) { plugins.registry[id] = meta; }
+
+        function loadScript(url) { return new Promise((res,rej) => { const s = document.createElement('script'); s.src = url; s.onload = res; s.onerror = rej; document.head.appendChild(s); }); }
+
+        // Example: register some placeholder plugins (could be remote URLs)
+        registerPlugin('translator', { name: 'Translator', description: 'Terjemahkan teks antar bahasa', url: '' });
+        registerPlugin('pdfqa', { name: 'PDF Q&A', description: 'Tanya jawab berdasarkan PDF', url: '' });
+
+        // restore active plugins
+        try { const saved = JSON.parse(localStorage.getItem('chimera_plugins')||'{}'); plugins.active = saved || {}; } catch(e) {}
+
+        // --- COLLABORATION (basic peer-to-peer scaffold) ---
+        // NOTE: This is a client-side scaffold. For production, a signaling server is required.
+        const collab = { peer: null, conn: null };
+
+        async function openCollabShare() {
+            const content = `<div class="p-4"><h3 class="text-lg font-semibold">Share Percakapan</h3><p class="text-sm text-gray-400">Bagikan link atau token kepada rekan untuk bergabung (Prototype P2P). Untuk koneksi real-time yang stabil, gunakan signaling server.</p><div class="mt-3"><button id="create-offer" class="px-3 py-2 bg-blue-600 text-white rounded-md">Buat Link (Offer)</button><button id="join-offer" class="px-3 py-2 ml-2 bg-gray-600 text-white rounded-md">Gabung dengan Offer</button></div><div id="collab-output" class="mt-3 text-sm text-gray-400"></div></div>`;
+            showModal(content,'max-w-lg');
+            document.getElementById('create-offer').addEventListener('click', async () => {
+                showToast('Membuat offer P2P (prototype)...');
+                // create simple datachannel via RTCPeerConnection; user copies base64 offer to peer.
+                const pc = new RTCPeerConnection(); const dc = pc.createDataChannel('chimera-collab');
+                dc.onmessage = (ev)=> handleCollabMessage(ev.data, true);
+                pc.onicecandidate = (e) => { if (e.candidate) return; document.getElementById('collab-output').textContent = btoa(JSON.stringify(pc.localDescription)); };
+                const offer = await pc.createOffer(); await pc.setLocalDescription(offer);
+                collab.peer = pc; collab.conn = dc;
+            });
+            document.getElementById('join-offer').addEventListener('click', async () => {
+                const text = prompt('Paste offer (base64) dari host:'); if (!text) return;
+                try {
+                    const pc = new RTCPeerConnection();
+                    pc.ondatachannel = (e) => { const dc = e.channel; dc.onmessage = ev => handleCollabMessage(ev.data, false); collab.conn = dc; };
+                    const desc = JSON.parse(atob(text)); await pc.setRemoteDescription(desc);
+                    const answer = await pc.createAnswer(); await pc.setLocalDescription(answer);
+                    document.getElementById('collab-output').textContent = btoa(JSON.stringify(pc.localDescription));
+                    collab.peer = pc;
+                } catch(e) { console.error('join offer error', e); showToast('Gagal bergabung dengan offer', 'error'); }
+            });
+        }
+
+        function handleCollabMessage(data, fromHost) {
+            try { const msg = JSON.parse(data); if (msg.type === 'sync-chat') { /* merge remote edits (simplified) */ state.conversations[msg.convId] = msg.conversation; saveAllData(); loadConversations(); if (state.activeConversationId === msg.convId) renderConversation(msg.convId); showToast('Percakapan disinkronkan (remote).'); }
+            } catch(e){ console.warn('collab msg parse', e); }
+        }
+
+        function broadcastCollabUpdate(convId) {
+            try { if (!collab.conn) return; const payload = { type: 'sync-chat', convId, conversation: state.conversations[convId] }; collab.conn.send(JSON.stringify(payload)); } catch(e){ console.warn('broadcastCollabUpdate', e); }
+        }
+
+        // hook: after saving conversation, broadcast if collab active
+        const _origSaveAllData = saveAllData; saveAllData = function() { _origSaveAllData(); if (state.activeConversationId) broadcastCollabUpdate(state.activeConversationId); };
+
+        // --- AI MEMORY / CONTEXT MANAGER ---
+        const memory = { enabled: false, profile: {} };
+        function loadMemory() { try { const m = JSON.parse(localStorage.getItem('chimera_memory')||'{}'); memory.enabled = !!m.enabled; memory.profile = m.profile || {}; document.getElementById('memory-toggle-input').checked = memory.enabled; renderMemorySummary(); } catch(e){} }
+        function saveMemory() { localStorage.setItem('chimera_memory', JSON.stringify({ enabled: memory.enabled, profile: memory.profile })); }
+        function renderMemorySummary() {
+            const container = document.getElementById('memory-summary');
+            if (!container) return;
+            container.innerHTML = memory.enabled ? `<div class="p-2 text-sm">Nama: ${escapeHtml(memory.profile.name||'-')}<br/>Gaya: ${escapeHtml(memory.profile.style||'-')}<br/>Minat: ${escapeHtml((memory.profile.interests||[]).join(', ')||'-')}</div><div class="text-right"><button id="memory-reset" class="px-2 py-1 rounded-md bg-red-600 text-white">Reset Memory</button></div>` : '<div class="p-2 text-sm text-gray-400">Memori nonaktif</div>';
+            const resetBtn = document.getElementById('memory-reset'); if (resetBtn) resetBtn.addEventListener('click', () => { memory.profile = {}; saveMemory(); renderMemorySummary(); showToast('Memori direset', 'warning'); });
+        }
+
+        // --- DASHBOARD MODE ---
+        let dashboardMode = false;
+        function toggleDashboardMode() {
+            dashboardMode = !dashboardMode;
+            if (!dashboardMode) { // restore chat
+                dom.chatContainer.style.display = ''; dom.chatTitle.textContent = state.conversations[state.activeConversationId]?.title || 'Percakapan'; dom.sendButton.style.display = ''; dom.userInput.style.display = '';
+            } else {
+                // build a simple card grid from last conversation
+                dom.chatContainer.innerHTML = '';
+                const conv = state.conversations[state.activeConversationId] || { history: [] };
+                const grid = document.createElement('div'); grid.className = 'grid grid-cols-1 md:grid-cols-2 gap-4 p-4';
+                conv.history.forEach((m, idx) => {
+                    const card = document.createElement('div'); card.className = 'p-4 bg-[var(--surface-primary)] border border-[var(--border-primary)] rounded-lg';
+                    const role = m.role === 'user' ? 'User' : 'Assistant';
+                    card.innerHTML = `<div class="text-sm text-gray-400">${role} • ${new Date(m.date || Date.now()).toLocaleString()}</div><div class="mt-2">${escapeHtml((m.parts||[]).map(p=>p.text||'').join('\n'))}</div>`;
+                    grid.appendChild(card);
+                });
+                dom.chatContainer.appendChild(grid);
+                dom.sendButton.style.display = 'none'; dom.userInput.style.display = 'none';
+            }
+        }
+
+        // --- VOICE FULL-DUPLEX (simple auto-mic mode) ---
+        let fullDuplexActive = false;
+        function toggleFullDuplex() {
+            fullDuplexActive = !fullDuplexActive;
+            if (fullDuplexActive) startContinuousRecognition(); else stopContinuousRecognition();
+        }
+        async function startContinuousRecognition() {
+            if (!state.recognition) return showToast('SpeechRecognition tidak tersedia di browser ini', 'error');
+            try {
+                state.recognition.continuous = true; state.recognition.start(); showToast('Full-duplex mic aktif');
+                state.recognition.onresult = (e) => { const t = e.results[e.results.length-1][0].transcript; dom.userInput.value = t; autoResizeTextarea(); sendMessageToAI(); };
+            } catch(e) { console.error('startContinuousRecognition', e); }
+        }
+        function stopContinuousRecognition() { try { if (state.recognition) state.recognition.stop(); showToast('Full-duplex mic dimatikan'); } catch(e){} }
+
+        // --- WORKFLOW BUILDER (basic modal + node list stub) ---
+        function openWorkflowBuilder() {
+            const content = `<div class="p-4 h-[60vh] overflow-auto"><h3 class="text-lg font-semibold">Workflow Builder (Prototype)</h3><p class="text-sm text-gray-400">Drag & drop node editor placeholder. Simpan workflow untuk digunakan ulang.</p><div id="workflow-canvas" class="mt-3 p-3 bg-[var(--surface-primary)] rounded-md min-h-[300px]">(Canvas placeholder)</div><div class="flex justify-end mt-3"><button id="save-workflow" class="px-3 py-2 bg-blue-600 text-white rounded-md">Simpan</button></div></div>`;
+            showModal(content,'max-w-4xl');
+            document.getElementById('save-workflow').addEventListener('click', () => { const wf = { name: `wf_${Date.now()}`, nodes: [] }; const arr = JSON.parse(localStorage.getItem('chimera_workflows')||'[]'); arr.push(wf); localStorage.setItem('chimera_workflows', JSON.stringify(arr)); hideModal(); showToast('Workflow disimpan'); });
+        }
+
+        // --- TEMPLATE LIBRARY ---
+        function openTemplateLibrary() {
+            const arr = JSON.parse(localStorage.getItem('chimera_templates')||'[]');
+            let html = '<div class="p-4"><h3 class="text-lg font-semibold">Template Library</h3><div class="grid grid-cols-1 gap-3 mt-3">';
+            arr.forEach(t => html += `<div class="p-3 border rounded-md flex items-center justify-between"><div><strong>${escapeHtml(t.title)}</strong><div class="text-sm text-gray-400">${escapeHtml(t.desc||'')}</div></div><div><button data-id="${t.id}" class="use-template px-3 py-1 rounded-md bg-blue-600 text-white">Gunakan</button></div></div>`);
+            html += '</div><div class="mt-3 flex gap-2"><button id="add-template" class="px-3 py-2 bg-green-600 text-white rounded-md">Tambah Template</button><button id="close-templates" class="px-3 py-2 bg-transparent border rounded-md">Tutup</button></div></div>';
+            showModal(html,'max-w-2xl');
+            document.getElementById('add-template').addEventListener('click', () => { const title = prompt('Judul template'); const desc = prompt('Deskripsi singkat'); if (!title) return; const id = `tpl_${Date.now()}`; const arr = JSON.parse(localStorage.getItem('chimera_templates')||'[]'); arr.push({ id, title, desc, owner: 'me' }); localStorage.setItem('chimera_templates', JSON.stringify(arr)); hideModal(); openTemplateLibrary(); });
+            document.querySelectorAll('.use-template').forEach(btn => btn.addEventListener('click', (e)=>{ const id = e.currentTarget.dataset.id; const t = (JSON.parse(localStorage.getItem('chimera_templates')||'[]')).find(x=>x.id===id); if (t) { dom.userInput.value = t.title; autoResizeTextarea(); hideModal(); showToast('Template diterapkan'); } }));
+        }
+
+        // --- OFFLINE / LOCAL AI (stub) ---
+        let localAImode = false;
+        async function toggleLocalAImode() {
+            localAImode = !localAImode; localStorage.setItem('chimera_localai', JSON.stringify({ enabled: localAImode }));
+            if (localAImode) {
+                showToast('Local AI mode aktif (prototype). Model ringan akan dimuat jika tersedia.', 'warning');
+                // placeholder: load transformers.js or wasm model loader
+            } else showToast('Local AI mode nonaktif');
+        }
+
+        // --- GAMIFICATION / BADGES ---
+        const badges = { unlocked: JSON.parse(localStorage.getItem('chimera_badges')||'{}') };
+        function unlockBadge(key) { badges.unlocked[key] = true; localStorage.setItem('chimera_badges', JSON.stringify(badges.unlocked)); renderBadgeCount(); }
+        function renderBadgeCount() { const n = Object.keys(badges.unlocked||{}).length; const el = document.getElementById('badge-count'); if (el) el.textContent = n ? `+${n}` : ''; }
+        renderBadgeCount();
+
 
         function showToast(message, type = 'success') {
             // prevent duplicate toasts with same message within short window
@@ -1013,11 +1499,37 @@
         function ttsCacheSet(key, data){ try{ sessionStorage.setItem('tts_'+key, data); }catch(e){} }
 
         function fileToBase64(file) { return new Promise((resolve, reject) => { const reader = new FileReader(); reader.onload = () => resolve(reader.result.split(',')[1]); reader.onerror = error => reject(error); reader.readAsDataURL(file); }); }
-        function toggleFullscreen() { if (!document.fullscreenElement) { dom.appContainer.requestFullscreen().catch(err => showToast(`Error: ${err.message}`, 'error')); dom.fullscreenBtn.innerHTML = `<i data-lucide="minimize"></i> Keluar Layar Penuh`; } else { document.exitFullscreen(); dom.fullscreenBtn.innerHTML = `<i data-lucide="maximize"></i> Layar Penuh`; } lucide.createIcons(); }
+        async function toggleFullscreen() {
+            const el = dom.appContainer || document.documentElement;
+            // If not in fullscreen, request it; otherwise exit. Update button only after success.
+            if (!document.fullscreenElement) {
+                try {
+                    // vendor fallbacks for older browsers
+                    if (el.requestFullscreen) await el.requestFullscreen();
+                    else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+                    else if (el.mozRequestFullScreen) el.mozRequestFullScreen();
+                    else if (el.msRequestFullscreen) el.msRequestFullscreen();
+                    dom.fullscreenBtn.innerHTML = `<i data-lucide="minimize"></i> Keluar Layar Penuh`;
+                } catch (err) {
+                    showToast(`Error memasuki layar penuh: ${err.message}`, 'error');
+                }
+            } else {
+                try {
+                    if (document.exitFullscreen) await document.exitFullscreen();
+                    else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+                    else if (document.mozCancelFullScreen) document.mozCancelFullScreen();
+                    else if (document.msExitFullscreen) document.msExitFullscreen();
+                    dom.fullscreenBtn.innerHTML = `<i data-lucide="maximize"></i> Layar Penuh`;
+                } catch (err) {
+                    showToast(`Error keluar layar penuh: ${err.message}`, 'error');
+                }
+            }
+            lucide.createIcons();
+        }
         function autoResizeTextarea() { const ta = dom.userInput; ta.style.height = 'auto'; ta.style.height = `${Math.min(ta.scrollHeight, 200)}px`; }
         function scrollToBottom(instant = false) { dom.chatContainer.scrollTo({ top: dom.chatContainer.scrollHeight, behavior: instant ? 'instant' : 'smooth' }); }
-        function openSidebar() { dom.sidebar.classList.remove('-translate-x-full'); dom.sidebarOverlay.classList.remove('hidden'); }
-        function closeSidebar() { dom.sidebar.classList.add('-translate-x-full'); dom.sidebarOverlay.classList.add('hidden'); }
+    function openSidebar() { dom.sidebar.classList.remove('-translate-x-full'); dom.sidebarOverlay.classList.remove('hidden'); try { document.documentElement.classList.add('sidebar-open'); } catch(e){} }
+    function closeSidebar() { dom.sidebar.classList.add('-translate-x-full'); dom.sidebarOverlay.classList.add('hidden'); try { document.documentElement.classList.remove('sidebar-open'); } catch(e){} }
 
         function highlightCodeInElement(el) { el.querySelectorAll('pre code:not(.language-mermaid)').forEach(hljs.highlightElement); }
         
@@ -1092,13 +1604,41 @@
             dom.sidebarToggle.addEventListener('click', openSidebar);
             dom.sidebarClose.addEventListener('click', closeSidebar);
             dom.sidebarOverlay.addEventListener('click', closeSidebar);
+            // ...existing code...
             dom.fullscreenBtn.addEventListener('click', toggleFullscreen);
             dom.apiKeyButton.addEventListener('click', showApiKeyModal);
             if (dom.settingsButton) dom.settingsButton.addEventListener('click', showSettingsModal); else console.warn('settingsButton not found');
-            // new tools
-            if (dom.deepResearchBtn) dom.deepResearchBtn.addEventListener('click', openDeepResearch); else console.warn('deepResearchBtn not found');
-            if (dom.learningBtn) dom.learningBtn.addEventListener('click', openLearning); else console.warn('learningBtn not found');
-            if (dom.canvaBtn) dom.canvaBtn.addEventListener('click', openCanvaEditor); else console.warn('canvaBtn not found');
+            // Sidebar delegated handler: use a single listener on the sidebar to ensure clicks
+            // work even when inner SVGs/icons or dynamic elements intercept the event.
+            if (dom.sidebar) {
+                dom.sidebar.addEventListener('click', (e) => {
+                    const btn = e.target.closest('button');
+                    if (!btn || !dom.sidebar.contains(btn)) return;
+                    const id = btn.id;
+                    // ensure overlays don't block when opening tools
+                    const openAndUnblock = (fn) => { try { unblockOverlaysFullScreen(); } catch(e){} fn(); };
+                    switch(id) {
+                        case 'deep-research-btn': openAndUnblock(openDeepResearch); break;
+                        case 'learning-btn': openAndUnblock(openLearning); break;
+                        case 'canva-btn': openAndUnblock(openCanvaEditor); break;
+                        case 'plugin-store-btn': openPluginStore(); break;
+                        case 'collab-share-btn': openCollabShare(); break;
+                        case 'dashboard-switch-btn': toggleDashboardMode(); break;
+                        case 'workflow-btn': openWorkflowBuilder(); break;
+                        case 'templates-btn': openTemplateLibrary(); break;
+                        case 'badges-btn': showModal(`<div class="p-4"><h3 class="text-lg font-semibold">Badges</h3><pre>${JSON.stringify(badges.unlocked, null, 2)}</pre></div>`,'max-w-md'); break;
+                        // leave other buttons to their direct listeners (if present)
+                        default: break;
+                    }
+                });
+            } else {
+                console.warn('Sidebar element not found for delegated tool handling');
+            }
+
+            // memory toggle
+            document.getElementById('memory-toggle-input')?.addEventListener('change', (e) => { memory.enabled = e.target.checked; saveMemory(); renderMemorySummary(); showToast(memory.enabled ? 'Memori AI diaktifkan' : 'Memori AI dinonaktifkan'); });
+            // load memory on setup
+            loadMemory();
             dom.themeToggle.addEventListener('click', () => {
                 const themes = ['dark','light','sunset'];
                 const idx = themes.indexOf(state.currentTheme);
@@ -1175,11 +1715,16 @@
             }
 
             document.body.addEventListener('click', (e) => {
-                // close modal when clicking on backdrop or outside modal content
-                if (e.target.id === 'modal-backdrop' || e.target.id === 'modal-backdrop' || e.target.closest('#modal-backdrop')) {
-                    hideModal();
+                // close modal when clicking on the backdrop itself (not when clicking inside modal content)
+                // (use strict equality to avoid treating clicks inside modal as backdrop clicks)
+                if (e.target === dom.modalBackdrop) { hideModal(); return; }
+                // if a modal is currently visible, avoid the generic "click outside" fallback which
+                // can mistakenly close the modal when clicking interactive elements inside it.
+                const modalOpen = dom.modalBackdrop && !dom.modalBackdrop.classList.contains('opacity-0');
+                if (!modalOpen) {
+                    // only apply the old outside-click fallback when no modal is open
+                    if (!e.target.closest('div[class*="max-w-"]') && !e.target.closest('#api-key-button') && !e.target.closest('#settings-button') && !e.target.closest('#modal-backdrop')) { hideModal(); }
                 }
-                if (!e.target.closest('div[class*="max-w-"]') && !e.target.closest('#api-key-button') && !e.target.closest('#settings-button') && !e.target.closest('#modal-backdrop')) hideModal();
                 if (e.target.id === 'close-modal-button' || e.target.id === 'close-settings-button') hideModal();
 
                 // delegated fallback for new tools (in case direct binding failed)
@@ -1365,7 +1910,7 @@
             });
 
             // Refresh UI when entering/exiting fullscreen to avoid broken icons/editor
-            document.addEventListener('fullscreenchange', () => {
+            function onFullScreenChange() {
                 try { lucide.createIcons(); mermaid.initialize({ startOnLoad: false, theme: state.currentTheme }); }
                 catch(e){ console.warn('refresh after fullscreen failed', e); }
                 // if Canva modal open, try to re-render preview
@@ -1387,13 +1932,30 @@
                 } catch(e) { /* ignore */ }
                 // aggressive disable of large blocking elements when entering fullscreen
                 try {
-                    if (document.fullscreenElement) {
+                    const isFs = !!(document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement);
+                    // toggle a class on the root to allow CSS rules to adjust layout
+                    document.documentElement.classList.toggle('in-fullscreen', isFs);
+                    // sync aria and button text/icon if available
+                    if (dom.fullscreenBtn) {
+                        dom.fullscreenBtn.setAttribute('aria-pressed', String(isFs));
+                        dom.fullscreenBtn.innerHTML = isFs ? `<i data-lucide="minimize"></i> Keluar Layar Penuh` : `<i data-lucide="maximize"></i> Layar Penuh`;
+                        lucide.createIcons();
+                    }
+                    if (isFs) {
                         aggressiveDisableBlockingOverlays();
                     } else {
                         aggressiveRestoreBlockingOverlays();
                     }
                 } catch(e) { console.warn('aggressive overlay toggle failed', e); }
-            });
+            }
+
+            // Register standard and vendor-prefixed fullscreenchange events for broader compatibility
+            try {
+                document.addEventListener('fullscreenchange', onFullScreenChange);
+                document.addEventListener('webkitfullscreenchange', onFullScreenChange);
+                document.addEventListener('mozfullscreenchange', onFullScreenChange);
+                document.addEventListener('MSFullscreenChange', onFullScreenChange);
+            } catch(e) { /* ignore if not supported */ }
 
                     // helper to force-hide overlays that may block clicks in fullscreen
                     function unblockOverlaysFullScreen() {
@@ -1411,7 +1973,9 @@
                     }
 
                     // --- aggressive fullscreen overlay handler ---
-                    const _fsDisabled = new WeakMap();
+                    // Track overlays we hide when entering fullscreen so we can restore them later.
+                    // Use a Map instead of WeakMap to allow iteration and clearing.
+                    let _fsDisabled = new Map();
                     function aggressiveDisableBlockingOverlays() {
                         try {
                             const vw = window.innerWidth, vh = window.innerHeight;
@@ -1442,11 +2006,8 @@
                             _fsDisabled.forEach((orig, el) => {
                                 try { el.style.display = orig.display; el.style.visibility = orig.visibility; el.style.pointerEvents = orig.pointerEvents; } catch(e){}
                             });
-                            // clear map
-                            // WeakMap cannot be iterated to clear; create new WeakMap instead
-                            // (we'll just replace it)
-                            // eslint-disable-next-line no-unused-vars
-                            _fsDisabled = new WeakMap();
+                            // clear map by creating a fresh Map
+                            _fsDisabled = new Map();
                         } catch(e) { console.warn('aggressiveRestore error', e); }
                     }
 
