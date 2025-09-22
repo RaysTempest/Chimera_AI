@@ -2,7 +2,7 @@
 <html lang="id" class="dark">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
     <title>Project Chimera v7.0 - Asisten AI Canggih</title>
 
     <!-- Pustaka Eksternal -->
@@ -28,6 +28,15 @@
     <style>
     :root { --sidebar-width: 260px; }
         :root {
+            /* Spacing and size scale */
+            --space-xxs: 4px; --space-xs: 8px; --space-sm: 12px; --space-md: 16px; --space-lg: 24px; --space-xl: 32px;
+            --radius-sm: 6px; --radius-md: 10px; --radius-pill: 999px;
+            --touch-size: 44px; --control-size: 40px;
+            --shadow-soft: 0 6px 18px rgba(2,6,23,0.45); --shadow-medium: 0 10px 30px rgba(2,6,23,0.55);
+            --break-mobile: 640px; --break-tablet: 1024px;
+            /* Safe-area helper */
+            --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+
             --bg-dark: #020617; --bg-light: #f8fafc;
             --surface-dark: #0f172a; --surface-light: #ffffff;
             --text-dark: #e2e8f0; --text-light: #0f172a;
@@ -36,6 +45,17 @@
             --accent-glow: rgba(59, 130, 246, 0.5);
             --font-body: 'Inter', sans-serif;
             --font-header: 'Orbitron', sans-serif;
+        }
+        /* Type scale and visual tokens */
+        :root {
+            --type-xxl: 1.6rem; /* h1 */
+            --type-xl: 1.25rem; /* h2 */
+            --type-lg: 1.05rem; /* h3 / section */
+            --type-base: 0.95rem; /* body */
+            --type-sm: 0.85rem;
+            --muted: rgba(226,232,240,0.7);
+            --bubble-user-bg: linear-gradient(90deg, rgba(37,99,235,0.12), rgba(59,130,246,0.06));
+            --bubble-assistant-bg: rgba(255,255,255,0.02);
         }
         html.dark {
             color-scheme: dark;
@@ -58,9 +78,12 @@
         body {
             font-family: var(--font-body); background-color: var(--bg-primary);
             color: var(--text-primary); transition: background-color 0.5s, color 0.5s;
-            overflow: auto;
+            overflow: auto; font-size: 14px; line-height: 1.35;
         }
         h1, h2, h3 { font-family: var(--font-header); }
+    h1 { font-size: var(--type-xxl); margin: 0; }
+    h2 { font-size: var(--type-xl); margin: 0; }
+    h3 { font-size: var(--type-lg); margin: 0; }
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background-color: rgba(128, 128, 128, 0.3); border-radius: 10px; border: 2px solid transparent; background-clip: content-box;}
@@ -96,7 +119,7 @@
             background-size: 200% 200%;
         }
 
-        .markdown-content table { width: 100%; border-collapse: collapse; margin: 1em 0; }
+    .markdown-content table { width: 100%; border-collapse: collapse; margin: 1em 0; }
         .markdown-content th, .markdown-content td { border: 1px solid var(--border-primary); padding: 0.75rem; }
         .markdown-content th { background-color: var(--surface-primary); }
         .markdown-content pre { position: relative; }
@@ -110,6 +133,15 @@
         .api-status-pulse { animation: pulse-red 2s infinite; }
         @keyframes mic-pulse { 0%, 100% { color: var(--accent); } 50% { color: #f87171; } }
         .mic-listening { animation: mic-pulse 1.5s ease-in-out infinite; }
+    /* Micro-interactions: touch feedback and tuned typing animation */
+    .btn, button { transition: transform 120ms cubic-bezier(.2,.9,.2,1), box-shadow 120ms ease, opacity 120ms ease; }
+    .btn:active, button:active { transform: scale(0.985); }
+    .touch-press { transform: translateY(1px) scale(0.995); }
+    .typing-indicator { display: inline-flex; gap: 6px; align-items: center; }
+    .typing-indicator span { width: 6px; height: 6px; background: var(--muted); border-radius: 999px; opacity: 0.9; animation: dot 1s infinite ease-in-out; }
+    .typing-indicator span:nth-child(2) { animation-delay: 0.12s; }
+    .typing-indicator span:nth-child(3) { animation-delay: 0.24s; }
+    @keyframes dot { 0%, 80%, 100% { transform: translateY(0); opacity: 0.25 } 40% { transform: translateY(-6px); opacity: 1 } }
         /* Fullscreen helper: ensure app container covers full viewport when in fullscreen mode
            and reduce potential layout jumps by forcing width/height 100% */
         .in-fullscreen, :fullscreen #app-container, :-webkit-full-screen #app-container {
@@ -125,7 +157,7 @@
     .sidebar-open #app-container main { margin-left: var(--sidebar-width); transition: margin-left 0.25s ease; }
     /* Modern button baseline */
     button { font-family: var(--font-body); cursor: pointer; }
-    .btn { padding: 8px 12px; border-radius: 8px; border: 1px solid transparent; background: linear-gradient(180deg,var(--accent),var(--accent-hover)); color: white; box-shadow: 0 6px 18px rgba(37,99,235,0.12); transition: transform .12s ease, box-shadow .12s ease, opacity .12s ease; }
+    .btn { padding: calc(var(--space-xs)) calc(var(--space-sm)); border-radius: var(--radius-md); border: 1px solid transparent; background: linear-gradient(180deg,var(--accent),var(--accent-hover)); color: white; box-shadow: var(--shadow-soft); transition: transform .12s ease, box-shadow .12s ease, opacity .12s ease; font-size: 0.95rem; }
     .btn:active { transform: translateY(1px) scale(.998); }
     .btn-ghost { background: transparent; border-color: rgba(255,255,255,0.04); color: var(--text-primary); }
     /* Modal content wrapper must accept pointer events to ensure inner controls are interactive */
@@ -171,6 +203,214 @@
     .sidebar-open #app-container main { margin-left: var(--sidebar-width); transition: margin-left 0.2s ease; }
     </style>
     <style>
+    /* Mobile safety and precision fixes */
+    html, body { overflow-x: hidden; }
+    /* Ensure chat container leaves room for floating composer on mobile */
+    #chat-container { padding-bottom: 88px; }
+    @media (max-width: 640px) {
+        #chat-container { padding-left: 8px; padding-right: 8px; padding-bottom: 140px; }
+        footer { padding: 8px 10px; left: 8px; right: 8px; bottom: calc(8px + env(safe-area-inset-bottom)); }
+        /* keep send and mic inside composer (no fixed floats) */
+        #send-button, #mic-btn { position: static !important; right: auto !important; left: auto !important; bottom: auto !important; z-index: auto !important; }
+        .chat-bubble { word-break: break-word; }
+        aside#sidebar { transition: transform 0.22s cubic-bezier(.4,0,.2,1); }
+        .sidebar-open aside#sidebar { box-shadow: 0 8px 32px rgba(0,0,0,0.25); }
+        /* composer should expand to full width inside footer */
+        footer .composer { width: 100%; display: flex; align-items: center; gap: 8px; }
+        footer .composer .flex-1, footer .composer textarea { width: 100%; }
+    }
+    /* Thinking / appearance animations */
+    .typing-indicator { display:inline-flex; gap:6px; align-items:center; }
+    .typing-indicator span { display:inline-block; width:8px; height:8px; border-radius:999px; background:var(--accent); opacity:0.3; transform: translateY(0); }
+    .typing-indicator span:nth-child(1) { animation: dot 1.05s infinite 0s; }
+    .typing-indicator span:nth-child(2) { animation: dot 1.05s infinite 0.18s; }
+    .typing-indicator span:nth-child(3) { animation: dot 1.05s infinite 0.36s; }
+    @keyframes dot { 0% { opacity:0.18; transform: translateY(0); } 40% { opacity:1; transform: translateY(-6px); } 100% { opacity:0.18; transform: translateY(0); } }
+
+    .message-thinking { opacity: 0.95; filter: blur(0.0px); }
+    .message-thinking .markdown-content { opacity: 0.92; }
+    .message-thinking .markdown-content::after { content: ''; display:block; height:8px; margin-top:6px; border-radius:4px; background: linear-gradient(90deg, rgba(255,255,255,0.02) 25%, rgba(255,255,255,0.05) 50%, rgba(255,255,255,0.02) 75%); background-size:200% 100%; animation: shimmer 1.2s linear infinite; }
+
+    @keyframes shimmer { 0% { background-position: -150% 0; } 100% { background-position: 150% 0; } }
+
+    .message-appear { animation: messageAppear 320ms cubic-bezier(.2,.9,.28,1) both; }
+    @keyframes messageAppear { from { opacity: 0; transform: translateY(8px) scale(.995); } to { opacity: 1; transform: translateY(0) scale(1); } }
+
+    /* when streaming, show subtle cursor/glow */
+    .streaming-cursor { color: var(--accent); font-weight:700; margin-left:6px; }
+    /* Composer specifics */
+    .composer { display: flex; align-items: center; gap: 8px; }
+    .composer textarea { font-size: 15px; line-height: 1.25; max-height: 160px; }
+    .composer button { min-width: 44px; min-height: 44px; display: inline-flex; align-items: center; justify-content: center; }
+    @media (max-width: 640px) {
+        footer { padding-left: 8px; padding-right: 8px; }
+        .composer { padding: 6px; }
+    }
+    </style>
+    <style>
+    /* Mobile-compact helper styles activated via JS (class mobile-compact on <html>) */
+    html.mobile-compact footer { position: fixed; left: 6px; right: 6px; bottom: calc(6px + env(safe-area-inset-bottom)); border-radius: 999px; padding: 8px; z-index: 60; box-shadow: 0 8px 28px rgba(2,6,23,0.6); }
+    html.mobile-compact #chat-container { padding-left: 8px; padding-right: 8px; }
+    html.mobile-compact .chat-bubble { max-width: calc(100% - 48px); border-radius: 14px; }
+    html.mobile-compact .chat-bubble.user { margin-left: auto; margin-right: 6px; }
+    html.mobile-compact .chat-bubble.assistant { margin-left: 6px; margin-right: auto; }
+    html.mobile-compact #send-button { position: fixed; right: 18px; bottom: calc(18px + env(safe-area-inset-bottom)); z-index: 70; width: 56px; height: 56px; border-radius: 999px; }
+    html.mobile-compact #user-input { padding-right: 84px !important; }
+    html.mobile-compact header { padding: 10px 12px; }
+    html.mobile-compact .welcome-prompt-btn { padding: 12px; }
+    html.mobile-compact .prose { font-size: 0.98rem; }
+    </style>
+    <style>
+    /* Stronger mobile chat styling to mimic modern chat apps (Gemini/ChatGPT-like) */
+    @media (max-width: 640px) {
+        /* Header: hamburger left, centered title */
+        header { display: flex; align-items: center; justify-content: center; position: relative; padding: 10px 12px; }
+        #sidebar-toggle { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); display: inline-flex; z-index: 70; }
+        #reset-layout-btn, #export-single-chat-btn { display: none !important; }
+        header h1#chat-title { margin: 0 auto; text-align: center; font-size: 16px; font-weight: 600; }
+
+        /* Composer card: floating rounded pill with gentle shadow */
+        footer { padding: 10px; left: 8px; right: 8px; bottom: calc(8px + env(safe-area-inset-bottom)); position: fixed; z-index: 80; border-radius: 999px; display: flex; align-items: center; box-shadow: 0 10px 30px rgba(2,6,23,0.5); background: linear-gradient(180deg, rgba(6,8,12,0.9), rgba(10,12,16,0.95)); }
+        footer .flex-1 { margin: 0 8px; }
+        #user-input { background: transparent; color: inherit; border: none; box-shadow: none; padding: 12px 56px 12px 16px; border-radius: 999px; }
+        #user-input:focus { outline: none; box-shadow: none; }
+
+        /* Floating send button inside composer */
+        #send-button { position: absolute; right: 18px; bottom: calc(14px + env(safe-area-inset-bottom)); z-index: 90; width: 56px; height: 56px; border-radius: 999px; display: inline-flex; align-items: center; justify-content: center; }
+
+    /* Message bubbles: full width, tighter spacing and visual style like modern chat apps */
+    .flex.gap-3 { align-items: flex-end; }
+    .flex.gap-3 > .border { max-width: calc(100% - 88px); display: block; padding: 10px 14px; border-radius: 14px; }
+    .flex.justify-end .border { margin-left: auto; margin-right: 8px; background: linear-gradient(90deg, rgba(59,130,246,0.15), rgba(37,99,235,0.07)); border: 1px solid rgba(37,99,235,0.12); }
+    .flex.justify-start .border { margin-left: 8px; margin-right: auto; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.04); }
+    .flex.gap-3 > .markdown-content p { margin: 0.2rem 0; line-height: 1.35; }
+    .markdown-content { color: rgba(226,232,240,0.95); font-size: 15px; }
+
+        /* Remove extra margins on chat container */
+        #chat-container { padding-left: 8px; padding-right: 8px; }
+
+    /* Timestamps/controls inside bubbles are small and subtle */
+    .group .text-xs { display: none !important; }
+    .chat-bubble .markdown-content .time { font-size: 11px; color: rgba(255,255,255,0.36); }
+    }
+    </style>
+    <style>
+    /* Fine-tune colors and shadows for mobile to match Gemini/ChatGPT aesthetic */
+    @media (max-width: 640px) {
+        :root { --mobile-accent: #2f6ef7; --mobile-user-bg: linear-gradient(90deg,#2f6ef7,#1f4fe6); }
+        .chat-bubble.user { background: var(--mobile-user-bg); color: white; border: none; box-shadow: 0 8px 20px rgba(31,79,230,0.12); }
+        .chat-bubble.assistant { background: rgba(255,255,255,0.02); color: #e6eefc; border: 1px solid rgba(255,255,255,0.04); box-shadow: none; }
+        header h1#chat-title { font-weight: 700; letter-spacing: 0.2px; }
+        #user-input { font-size: 15px; line-height: 1.25; }
+        #send-button { background: linear-gradient(180deg,var(--mobile-accent),#175ce6); box-shadow: 0 12px 30px rgba(23,92,230,0.18); }
+        /* Slightly reduce spacing between messages */
+        #chat-container > div { margin-bottom: 10px; }
+    }
+    </style>
+    <style>
+    /* Responsive improvements for mobile, tablet, desktop */
+    /* Helper translate class used by JS to hide sidebar on small screens */
+    .-translate-x-full { transform: translateX(-110%) !important; }
+
+    /* Modal responsive: ensure modal content fits small screens and becomes nearly fullscreen */
+    #modal-content-wrapper > div {
+        max-width: 980px;
+        width: 100%;
+        margin: 0 auto;
+    }
+
+    @media (max-width: 1024px) {
+        #modal-content-wrapper > div { max-width: 92%; }
+    }
+
+    @media (max-width: 640px) {
+    /* Off-canvas sidebar for phones */
+    aside#sidebar { position: fixed; left: 0; top: 0; bottom: 0; height: 100vh; width: min(86vw, 320px); z-index: 60; transform: translateX(-110%); transition: transform 0.22s ease; box-shadow: 0 12px 40px rgba(2,6,23,0.6); }
+    .sidebar-open aside#sidebar { transform: translateX(0) !important; }
+
+        /* Make modal nearly full-screen on mobile */
+        #modal-content-wrapper { padding: 8px; }
+        #modal-content-wrapper > div { width: 100%; max-width: 98%; height: calc(100vh - 24px); border-radius: 12px; overflow: auto; }
+
+    /* Touch-friendly controls */
+    button, .btn { min-height: 48px; padding-left: 12px; padding-right: 12px; }
+    textarea#user-input { font-size: 16px; padding: 12px 64px 12px 16px; border-radius: 999px; }
+    #send-button { width:56px; height:56px; position: absolute; right: 12px; top: 50%; transform: translateY(-50%); box-shadow: 0 8px 20px rgba(37,99,235,0.2); }
+    #mic-btn { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); }
+
+    /* Smaller headers and tighter spacing */
+    header { padding: 8px 10px; display:flex; align-items:center; justify-content:center; }
+    header .glass-effect { width: 100%; display:flex; align-items:center; justify-content:center; padding: 8px 12px; }
+    header h1#chat-title { text-align:center; font-size: 1rem; }
+    /* hide some desktop-only controls to reduce clutter */
+    #export-single-chat-btn, #sidebar-close, .conv-pill .delete-chat-btn { display: none !important; }
+    .sidebar-top .text-2xl { font-size: 1.06rem; }
+    .tool-label .line-1 { font-size: 0.94rem; }
+    .tool-label .line-2 { font-size: 0.72rem; }
+    /* Chat bubbles: full width, compact, no avatars to maximize space */
+    .chat-bubble { padding: 10px 12px; max-width: calc(100% - 64px); margin-left: 8px; margin-right: 8px; border-radius: 12px; }
+    .chat-bubble.user { margin-left: auto; margin-right: 8px; border-top-right-radius: 6px; border-bottom-right-radius: 6px; }
+    .chat-bubble.assistant { margin-right: auto; margin-left: 8px; border-top-left-radius: 6px; border-bottom-left-radius: 6px; }
+    .w-8.h-8, .avatar, .conv-radio { display: none !important; }
+    /* Welcome prompt buttons full-width */
+    .welcome-prompt-btn { display:block; width:100%; }
+    .welcome-prompt-btn strong { display:block; font-size:1rem; }
+    .welcome-prompt-btn p { margin:0; }
+    /* Ensure timestamps small and unobtrusive */
+    .chat-bubble .text-xs { display:none; }
+    }
+
+    /* Medium screens (tablets) tweaks */
+    @media (min-width: 641px) and (max-width: 1024px) {
+        aside#sidebar { width: 220px; }
+        :root { --sidebar-width: 220px; }
+        #modal-content-wrapper > div { max-width: 820px; }
+    }
+    </style>
+    <style>
+    /* Mobile-specific layout tweaks to keep input visible and footer fixed */
+    @media (max-width: 640px) {
+    footer { position: fixed; left: 0; right: 0; bottom: 0; z-index: 40; background: linear-gradient(180deg, rgba(8,10,14,0.9), rgba(8,10,14,0.95)); padding: 10px; padding-bottom: calc(10px + env(safe-area-inset-bottom)); }
+        #chat-container { padding-bottom: 88px; /* leave space for fixed footer */ }
+        #app-container { padding-bottom: env(safe-area-inset-bottom); }
+        /* Ensure Ace editor and preview stack vertically on mobile */
+        #ace-wrapper { height: 240px; }
+        .w-1\/2 { width: 100% !important; }
+        .h-full { height: auto !important; }
+        #canva-preview { min-height: 220px; }
+        /* Reduce heavy shadows on mobile for performance */
+        .shadow-2xl { box-shadow: 0 6px 18px rgba(2,6,23,0.45) !important; }
+        footer .flex-1 { line-height: 1.15; }
+    }
+    </style>
+    <style>
+    /* Strong mobile composer overrides to avoid float/overlap issues on phones */
+    @media (max-width: 640px) {
+        /* Target our mobile composer container explicitly */
+    #mobile-composer { display: flex !important; align-items: center !important; gap: var(--space-xs) !important; width: calc(100% - (var(--space-sm) * 1)) !important; margin: 0 auto; box-sizing: border-box; border-radius: var(--radius-pill); padding-left: var(--space-sm); padding-right: var(--space-sm); }
+
+        /* Ensure controls are inline and not absolutely positioned */
+    #mobile-composer label[for="image-upload-input"],
+    #mobile-composer #mic-btn,
+    #mobile-composer #send-button { position: static !important; right: auto !important; left: auto !important; bottom: auto !important; transform: none !important; z-index: auto !important; }
+
+        /* Increase touch targets and equalize sizes */
+    #mobile-composer label[for="image-upload-input"],
+    #mobile-composer #mic-btn,
+    #mobile-composer #send-button { min-width:var(--touch-size); min-height:var(--touch-size); width:var(--touch-size); height:var(--touch-size); display:inline-flex; align-items:center; justify-content:center; border-radius: var(--radius-pill); }
+
+        /* Make textarea take remaining space and keep proper padding */
+        #mobile-composer .flex-1 { flex: 1 1 auto; min-width:0; }
+    #mobile-composer #user-input { width:100%; padding: calc(var(--space-xs)) calc(var(--space-sm)); margin:0; font-size:15px; line-height:1.2; border-radius: calc(var(--radius-pill)); }
+
+        /* Increase chat bottom padding to avoid overlap when keyboard open */
+    #chat-container { padding-bottom: calc(110px + var(--safe-area-bottom)) !important; }
+
+        /* Soften shadows and ensure composer background blends with footer */
+        footer { padding-left: 10px; padding-right: 10px; }
+    }
+    </style>
+    <style>
     /* Overall professional polish */
     :root { --ui-surface: #0b1220; --ui-muted: #9aa4b2; --ui-accent: #2563eb; --card-bg: rgba(255,255,255,0.03); }
     body { font-size: 14px; }
@@ -181,15 +421,17 @@
     .group .border { border-color: rgba(255,255,255,0.04) !important; }
     /* fallback: target elements marked as surface-primary */
     .group .surface-primary, .group .bg-surface-primary { background-color: rgba(8,10,14,0.6) !important; }
-    .chat-bubble { padding: 10px 12px; border-radius: 10px; line-height:1.3 }
-    .chat-bubble.user { background: linear-gradient(90deg, rgba(37,99,235,0.12), rgba(59,130,246,0.06)); border: 1px solid rgba(37,99,235,0.08); }
-    .chat-bubble.assistant { background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.02); }
+        .chat-bubble { padding: calc(var(--space-sm)) calc(var(--space-md)); border-radius: var(--radius-md); line-height:1.35; color: var(--text-primary); }
+        .chat-bubble.user { background: var(--bubble-user-bg); border: 1px solid rgba(59,130,246,0.06); box-shadow: none; }
+        .chat-bubble.assistant { background: var(--bubble-assistant-bg); border: 1px solid rgba(255,255,255,0.03); }
     /* Reduce footers & input size for compact look */
     footer { padding: 10px; }
     textarea#user-input { padding: 8px 40px 8px 12px; border-radius: 999px; font-size: 0.94rem; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.03); }
     #send-button { padding: 8px; width: 40px; height: 40px; border-radius: 999px; }
-    /* Buttons and focus states */
-    button:focus { outline: 2px solid rgba(37,99,235,0.18); outline-offset: 2px; }
+    /* Buttons and focus-visible states */
+    :focus:not(:focus-visible) { outline: none; }
+    :focus-visible { outline: 2px solid rgba(37,99,235,0.22); outline-offset: 3px; border-radius: 6px; }
+    button:focus { outline: none; }
     aside#sidebar button { transition: background-color 0.12s ease, transform 0.12s ease; }
     /* Tidy icons alignment */
     aside#sidebar i[data-lucide] { display: inline-flex; align-items: center; justify-content: center; }
@@ -216,7 +458,7 @@
     
 
     <div id="app-container" class="h-screen w-screen flex flex-col md:flex-row animated-bg">
-        <div id="sidebar-overlay" class="fixed inset-0 bg-black/60 z-30 hidden md:hidden transition-opacity duration-300"></div>
+    <div id="sidebar-overlay" class="fixed inset-0 bg-black/60 z-30 hidden md:hidden transition-opacity duration-300" style="opacity:0; pointer-events:none;"></div>
         
         <aside id="sidebar" class="bg-black/30 h-full flex flex-col" style="width:var(--sidebar-width); transition: transform 0.25s ease;" role="navigation" aria-label="Sidebar tools">
             <div class="sidebar-inner h-full flex flex-col p-4">
@@ -284,31 +526,37 @@
                 <h1 id="chat-title" class="text-lg font-semibold truncate pr-4">Percakapan Baru</h1>
                 <div class="flex items-center gap-2">
                     <button id="export-single-chat-btn" class="px-3 py-1 rounded-md hover:bg-white/10">Ekspor Chat</button>
+                    <button id="reset-layout-btn" title="Reset Tata Letak" class="px-3 py-1 rounded-md hover:bg-white/10">Reset Layout</button>
                 </div>
                 <button id="sidebar-toggle" class="p-2 rounded-md hover:bg-white/20 transition-all md:hidden"><i data-lucide="menu"></i></button>
              </header>
             <div class="flex-1 flex flex-col glass-effect m-2 md:m-4 mt-0 rounded-b-2xl overflow-hidden shadow-2xl">
                 <div id="chat-container" class="flex-1 p-4 sm:p-6 space-y-6 overflow-y-auto"></div>
-                <footer class="p-4 border-t border-[var(--border-primary)] shrink-0 space-y-3">
-                    <div id="stop-generation-container" class="text-center hidden">
-                         <button id="stop-generation-btn" class="px-4 py-1.5 text-sm border border-yellow-500/50 text-yellow-300 rounded-lg hover:bg-yellow-500/20 transition-colors flex items-center gap-2 mx-auto">
+                <footer class="p-3 border-t border-[var(--border-primary)] shrink-0">
+                    <div id="stop-generation-container" class="text-center hidden mb-2">
+                         <button id="stop-generation-btn" class="w-full px-4 py-1.5 text-sm border border-yellow-500/50 text-yellow-300 rounded-lg hover:bg-yellow-500/20 transition-colors flex items-center gap-2">
                             <i data-lucide="square" class="w-4 h-4"></i> Hentikan Generasi
                          </button>
                     </div>
-                    <div id="image-preview-container" class="flex gap-2 items-center"></div>
-                    <div class="flex items-end gap-2 sm:gap-3">
-                        <label for="image-upload-input" class="p-3 rounded-full hover:bg-white/10 cursor-pointer transition-colors" title="Unggah gambar">
-                            <i data-lucide="paperclip"></i>
+                    <div id="image-preview-container" class="flex gap-2 items-center mb-2"></div>
+
+                    <!-- Mobile-friendly composer: file | mic | input | send -->
+                        <div id="mobile-composer" class="relative flex items-center gap-2 bg-[var(--surface-primary)] border border-[var(--border-primary)] rounded-full px-2 py-2 shadow-sm" style="align-items:center">
+                        <label for="image-upload-input" class="flex items-center justify-center p-2 rounded-full hover:bg-white/5 cursor-pointer transition-colors text-gray-300" title="Unggah gambar">
+                            <i data-lucide="paperclip" class="w-5 h-5"></i>
                         </label>
                         <input type="file" id="image-upload-input" class="hidden" accept="image/*">
-                        <div class="flex-1 relative">
-                            <textarea id="user-input" placeholder="Ketik pesan, unggah gambar, atau gunakan mic..." class="w-full p-3 pl-4 pr-12 border border-[var(--border-primary)] rounded-2xl bg-transparent focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:shadow-[0_0_15px_var(--accent-glow)] transition-all resize-none" rows="1"></textarea>
-                            <button id="mic-btn" class="absolute right-4 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-white transition-colors" title="Input suara">
-                                <i data-lucide="mic"></i>
-                            </button>
+
+                        <button id="mic-btn" class="p-2 rounded-full text-gray-300 hover:text-white hover:bg-white/5 transition-colors" title="Input suara" aria-label="microphone">
+                            <i data-lucide="mic" class="w-5 h-5"></i>
+                        </button>
+
+                        <div class="flex-1 mx-1">
+                            <textarea id="user-input" placeholder="Ketik pesan..." class="w-full p-2 pl-3 pr-3 border-none bg-transparent focus:outline-none resize-none" rows="1" aria-label="Pesan pengguna"></textarea>
                         </div>
-                        <button type="submit" id="send-button" class="bg-gradient-to-br from-blue-500 to-blue-600 text-white p-3 rounded-full shadow-lg transition-all transform hover:scale-110 hover:shadow-xl hover:shadow-blue-500/40 active:scale-100 disabled:bg-gray-500 disabled:from-gray-500 disabled:scale-100 disabled:cursor-not-allowed disabled:shadow-none">
-                            <i data-lucide="send"></i>
+
+                        <button type="submit" id="send-button" class="ml-1 flex items-center justify-center bg-gradient-to-br from-blue-500 to-blue-600 text-white p-3 rounded-full shadow-lg transition-transform transform hover:scale-105" aria-label="Kirim pesan">
+                            <i data-lucide="send" class="w-5 h-5"></i>
                         </button>
                     </div>
                 </footer>
@@ -320,6 +568,40 @@
     <div id="toast-container" class="fixed bottom-5 right-5 z-[100] space-y-2"></div>
     
     <script>
+    // Smoke-check + icons refresh helper
+    (function(){
+        function showToast(msg, timeout=3000){
+            try{
+                const tc = document.getElementById('toast-container');
+                if(!tc) return;
+                const el = document.createElement('div');
+                el.className = 'px-3 py-2 rounded-md bg-black/80 text-white text-sm shadow-md';
+                el.textContent = msg;
+                tc.appendChild(el);
+                setTimeout(()=> el.remove(), timeout);
+            }catch(e){ console.warn('toast failed', e); }
+        }
+
+        document.addEventListener('DOMContentLoaded', ()=>{
+            const required = ['chat-container','user-input','send-button','mic-btn','image-upload-input','mobile-composer'];
+            const missing = required.filter(id => !document.getElementById(id));
+            if(missing.length) {
+                console.warn('Smoke-check: missing DOM elements', missing);
+                showToast('Warning: missing elements: ' + missing.join(', '), 6000);
+            } else {
+                console.log('Smoke-check: all core elements present.');
+                showToast('UI ready — basic checks OK', 2200);
+            }
+
+            // Safe lucide icon re-init (if lucide is loaded from CDN)
+            try{
+                if(window.lucide && typeof window.lucide.replace === 'function'){
+                    window.lucide.replace();
+                    console.log('Lucide icons re-initialized');
+                }
+            }catch(e){ console.warn('Lucide init failed', e); }
+        });
+    })();
     // ===================================================================================
     // Project Chimera v7.0 - Ultimate AI Assistant
     // Perbaikan: Tombol Salin Kode, Judul Chat Dinamis, UI Polish, Persona Baru
@@ -424,9 +706,108 @@
                     showToast('Selamat datang! Masukkan API Key Anda untuk memulai.', 'warning');
                 }, 1000);
             }
+            // Defensive: ensure no overlays/blockers remain from earlier sessions or partial fullscreen toggles
+            try { sanitizeOverlays(); } catch(e) { /* ignore */ }
+            try { applyMobileLayout(); } catch(e) { /* ignore */ }
         }
+
+            // Apply mobile-specific layout adjustments (compact chat composer, full-width bubbles)
+            function applyMobileLayout() {
+                try {
+                    const isMobile = window.innerWidth <= 640;
+                    // Floating composer: move footer out of normal flow on mobile
+                    if (isMobile) {
+                        document.documentElement.classList.add('mobile-compact');
+                        // ensure chat has bottom padding so messages aren't hidden
+                        const chat = document.getElementById('chat-container'); if (chat) chat.style.paddingBottom = '120px';
+                        // ensure sidebar hidden by default
+                        if (dom.sidebar) dom.sidebar.classList.add('-translate-x-full');
+                        if (dom.sidebarOverlay) { dom.sidebarOverlay.classList.add('hidden'); dom.sidebarOverlay.style.pointerEvents = 'none'; }
+                    } else {
+                        document.documentElement.classList.remove('mobile-compact');
+                        const chat = document.getElementById('chat-container'); if (chat) chat.style.paddingBottom = '';
+                        if (dom.sidebar && !document.documentElement.classList.contains('sidebar-open')) dom.sidebar.classList.remove('-translate-x-full');
+                        if (dom.sidebarOverlay) { dom.sidebarOverlay.classList.add('hidden'); dom.sidebarOverlay.style.pointerEvents = 'none'; }
+                    }
+                } catch(e) { console.warn('applyMobileLayout failed', e); }
+            }
         
         // --- CONVERSATION MANAGEMENT ---
+
+        // Defensive helper: force-hide overlays and clear pointer-events that may block input on mobile
+        function sanitizeOverlays() {
+            try {
+                // ensure DOM refs exist
+                if (dom.sidebarOverlay) {
+                    dom.sidebarOverlay.classList.add('hidden');
+                    dom.sidebarOverlay.style.pointerEvents = 'none';
+                    // also clear any inline opacity/manipulation
+                    dom.sidebarOverlay.style.opacity = '';
+                }
+                if (dom.modalBackdrop) {
+                    // if a modal is not expected to be open, force-backdrop hidden
+                    if (!dom.modalBackdrop.dataset.modalOpen) {
+                        dom.modalBackdrop.classList.add('opacity-0', 'pointer-events-none');
+                        try { dom.modalBackdrop.style.pointerEvents = 'none'; } catch(e){}
+                        try { dom.modalBackdrop.style.opacity = ''; } catch(e){}
+                    } else {
+                        // make sure modal wrapper receives pointer events
+                        const wrapper = dom.modalBackdrop.querySelector('#modal-content-wrapper');
+                        if (wrapper) { wrapper.style.pointerEvents = 'auto'; wrapper.setAttribute('tabindex','-1'); }
+                        try { dom.modalBackdrop.style.pointerEvents = 'auto'; } catch(e){}
+                    }
+                }
+                // Ensure sidebar is off-canvas on small devices
+                try { if (window.innerWidth <= 640 && dom.sidebar) dom.sidebar.classList.add('-translate-x-full'); } catch(e){}
+
+                // One-time mobile UI polish injection (keeps changes minimal and safe)
+                if (!document.documentElement.dataset.mobilePolishApplied) {
+                    const s = document.createElement('style');
+                    s.id = 'mobile-polish-styles';
+                    s.textContent = `
+                        @media (max-width: 640px) {
+                            footer { position: fixed; bottom: env(safe-area-inset-bottom); left: 0; right: 0; z-index: 40; background: linear-gradient(180deg, rgba(0,0,0,0.35), rgba(0,0,0,0.45)); }
+                            #chat-container { padding-bottom: 120px; }
+                            #user-input { padding-right: 4.25rem !important; }
+                            #send-button { position: absolute; right: 0.75rem; bottom: 0.75rem; transform: none; }
+                            .prose { word-break: break-word; }
+                            .glass-effect { background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); }
+                        }
+                    `;
+                    document.head.appendChild(s);
+                    document.documentElement.dataset.mobilePolishApplied = '1';
+                }
+            } catch(e) { console.warn('sanitizeOverlays failed', e); }
+        }
+
+        // Restore default layout: clear mobile classes, remove inline styles that may break layout,
+        // move sidebar back to left, hide overlays, and re-render icons.
+        function restoreDefaultLayout() {
+            try {
+                // clear applied mobile compact class
+                document.documentElement.classList.remove('mobile-compact');
+                // restore sidebar state
+                if (dom.sidebar) {
+                    dom.sidebar.classList.remove('-translate-x-full');
+                    dom.sidebar.style.transform = '';
+                }
+                // hide sidebar overlay
+                if (dom.sidebarOverlay) { dom.sidebarOverlay.classList.add('hidden'); dom.sidebarOverlay.style.pointerEvents = 'none'; dom.sidebarOverlay.style.opacity = ''; }
+                // ensure modal backdrop is not blocking
+                if (dom.modalBackdrop) { dom.modalBackdrop.classList.add('opacity-0','pointer-events-none'); dom.modalBackdrop.style.pointerEvents = 'none'; dom.modalBackdrop.style.opacity = ''; delete dom.modalBackdrop.dataset.modalOpen; }
+                // clear inline styles on chat and footer
+                const chat = document.getElementById('chat-container'); if (chat) chat.style.paddingBottom = '';
+                const footer = document.querySelector('footer'); if (footer) { footer.style.position = ''; footer.style.bottom = ''; footer.style.left = ''; footer.style.right = ''; footer.style.zIndex = ''; }
+                // reset any floating send-button positioning
+                const send = document.getElementById('send-button'); if (send) { send.style.position = ''; send.style.right = ''; send.style.bottom = ''; send.style.zIndex = ''; }
+                // update UI
+                lucide.createIcons();
+                applyMobileLayout(); // will set correct state for current viewport
+                // focus input where appropriate
+                try { setTimeout(() => { dom.userInput?.focus(); }, 80); } catch(e){}
+                showToast('Tata letak dipulihkan ke default', 'success');
+            } catch(e) { console.warn('restoreDefaultLayout failed', e); showToast('Gagal mereset tata letak', 'error'); }
+        }
 
         function createNewConversation() {
             const newId = `chat_${Date.now()}`;
@@ -585,6 +966,7 @@
                     ${!isUser ? `<div class="absolute -bottom-5 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                         <button class="copy-response-btn p-1.5 bg-[var(--surface-primary)] border border-[var(--border-primary)] rounded-md hover:bg-white/20" title="Salin"><i data-lucide="copy" class="w-4 h-4"></i></button>
                         <button class="tts-btn p-1.5 bg-[var(--surface-primary)] border border-[var(--border-primary)] rounded-md hover:bg-white/20" title="Dengarkan"><i data-lucide="volume-2" class="w-4 h-4"></i></button>
+                        <button class="regenerate-btn p-1.5 bg-[var(--surface-primary)] border border-[var(--border-primary)] rounded-md hover:bg-white/20" title="Regenerate"><i data-lucide="refresh-ccw" class="w-4 h-4"></i></button>
                         <button class="edit-message-btn p-1.5 bg-[var(--surface-primary)] border border-[var(--border-primary)] rounded-md hover:bg-white/20" data-index="${index}" title="Edit"><i data-lucide="edit-2" class="w-4 h-4"></i></button>
                         <button class="history-message-btn p-1.5 bg-[var(--surface-primary)] border border-[var(--border-primary)] rounded-md hover:bg-white/20" data-index="${index}" title="Riwayat"><i data-lucide="clock" class="w-4 h-4"></i></button>
                         <button class="delete-message-btn p-1.5 bg-[var(--surface-primary)] border border-[var(--border-primary)] rounded-md hover:bg-white/20" data-index="${index}" title="Hapus"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
@@ -602,10 +984,14 @@
         }
 
         function postProcessMessage(bubble) {
-            renderMathInElement(bubble);
-            highlightCodeInElement(bubble);
-            renderMermaidDiagrams(bubble);
-            addCopyToCodeBlocks(bubble);
+            // If the bubble is animated on appear, defer heavy processing very slightly
+            const run = () => {
+                renderMathInElement(bubble);
+                highlightCodeInElement(bubble);
+                renderMermaidDiagrams(bubble);
+                addCopyToCodeBlocks(bubble);
+            };
+            if (bubble.classList.contains('message-appear')) setTimeout(run, 140); else run();
             // sanitize HTML to prevent XSS (marked output)
             if (window.DOMPurify) {
                 const md = bubble.querySelector('.markdown-content');
@@ -706,6 +1092,23 @@
             try { dom.modalBackdrop.style.pointerEvents = 'auto'; } catch(e){}
             // mark backdrop as having a modal (useful for other logic)
             dom.modalBackdrop.dataset.modalOpen = '1';
+            // setup a lightweight focus-trap: keep tabbable focus within the modal
+            try {
+                const trap = (ev) => {
+                    const wrapper = dom.modalBackdrop.querySelector('#modal-content-wrapper');
+                    if (!wrapper) return;
+                    const focusable = wrapper.querySelectorAll('a[href], button:not([disabled]), textarea, input, select, [tabindex]:not([tabindex="-1"])');
+                    if (!focusable.length) return;
+                    const first = focusable[0]; const last = focusable[focusable.length -1];
+                    if (ev.key === 'Tab') {
+                        if (ev.shiftKey && document.activeElement === first) { ev.preventDefault(); last.focus(); }
+                        else if (!ev.shiftKey && document.activeElement === last) { ev.preventDefault(); first.focus(); }
+                    }
+                };
+                // store for later removal
+                dom._modalTrapHandler = trap;
+                document.addEventListener('keydown', trap);
+            } catch(e) { console.warn('modal focus-trap failed', e); }
         }
 
         function hideModal() {
@@ -716,7 +1119,10 @@
             }
             dom.modalBackdrop.classList.add('opacity-0', 'pointer-events-none');
             try { dom.modalBackdrop.style.pointerEvents = 'none'; } catch(e){}
+            // remove focus trap if present
+            try { document.removeEventListener('keydown', dom._modalTrapHandler); delete dom._modalTrapHandler; } catch(e){}
             delete dom.modalBackdrop.dataset.modalOpen;
+            try { scrollToBottom(true); } catch(e){}
         }
         
         function showApiKeyModal() {
@@ -849,7 +1255,6 @@
             // streaming simulation and basic source list shape
             let streamTimer = null;
             document.getElementById('deep-run').addEventListener('click', async () => {
-                console.log('deep-run clicked');
                 const q = document.getElementById('deep-query').value.trim();
                 const scope = document.getElementById('deep-scope').value;
                 const useWeb = document.getElementById('src-web').checked;
@@ -891,13 +1296,11 @@
             });
 
             document.getElementById('deep-export').addEventListener('click', () => {
-                console.log('deep-export clicked');
                 const res = document.getElementById('deep-results').innerText || '';
                 const blob = new Blob([res], { type: 'text/plain' }); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = `deep-research-${Date.now()}.txt`; a.click(); URL.revokeObjectURL(url); showToast('Hasil diekspor');
             });
 
             document.getElementById('deep-insert-chat').addEventListener('click', () => {
-                console.log('deep-insert-chat clicked');
                 const text = document.getElementById('deep-results').innerText || '';
                 if (!text) return showToast('Jalankan penelitian terlebih dahulu', 'warning');
                 // append as assistant response into current conversation
@@ -944,7 +1347,6 @@
             lucide.createIcons();
 
             document.getElementById('learn-run').addEventListener('click', () => {
-                console.log('learn-run clicked');
                 const topic = document.getElementById('learn-topic').value.trim();
                 const level = document.getElementById('learn-level').value;
                 if (!topic) return showToast('Masukkan topik pembelajaran', 'warning');
@@ -966,7 +1368,6 @@
             });
 
             document.getElementById('learn-quiz').addEventListener('click', () => {
-                console.log('learn-quiz clicked');
                 const topic = document.getElementById('learn-topic').value.trim();
                 if (!topic) return showToast('Masukkan topik terlebih dahulu', 'warning');
                 const out = document.getElementById('learn-results');
@@ -975,7 +1376,6 @@
             });
 
             document.getElementById('learn-insert').addEventListener('click', () => {
-                console.log('learn-insert clicked');
                 const text = document.getElementById('learn-results').innerText || '';
                 if (!text) return showToast('Buat modul dulu sebelum memasukkan', 'warning');
                 const conv = state.conversations[state.activeConversationId];
@@ -1037,9 +1437,16 @@
                     tplSel.addEventListener('change', () => { editor.setValue(templates[tplSel.value] || '', -1); });
                     // set initial template
                     editor.setValue(templates[tplSel.value] || '', -1);
+                    // ensure editor resizes properly on mobile
+                    setTimeout(() => { try { editor.resize(); ace.edit('ace-editor').focus(); } catch(e){} }, 180);
+
+                    // reflow editor on window resize (helpful when keyboard appears)
+                    const _aceResize = () => { try { editor.resize(); } catch(e){} };
+                    window.addEventListener('resize', _aceResize);
+                    // also re-apply mobile layout heuristics and sanitize overlays on resize
+                    window.addEventListener('resize', () => { try { applyMobileLayout(); sanitizeOverlays(); } catch(e){} });
 
                     document.getElementById('canva-run').addEventListener('click', () => {
-                        console.log('canva-run clicked');
                         const html = editor.getValue();
                         let sanitized = html;
                         try { sanitized = window.DOMPurify ? DOMPurify.sanitize(html) : html; } catch(e) { console.warn('DOMPurify sanitize failed', e); }
@@ -1047,10 +1454,9 @@
                         lucide.createIcons();
                     });
 
-                    document.getElementById('canva-close').addEventListener('click', () => { console.log('canva-close clicked'); hideModal(); });
+                    document.getElementById('canva-close').addEventListener('click', () => { hideModal(); });
 
                     document.getElementById('canva-export-pdf').addEventListener('click', () => {
-                        console.log('canva-export-pdf clicked');
                         const preview = document.getElementById('canva-preview');
                         if (!preview || preview.innerHTML.trim() === '') return showToast('Render preview terlebih dahulu', 'warning');
                         const container = document.createElement('div'); container.style.padding = '20px'; container.innerHTML = preview.innerHTML;
@@ -1109,7 +1515,7 @@
 
         function registerPlugin(id, meta) { plugins.registry[id] = meta; }
 
-        function loadScript(url) { return new Promise((res,rej) => { const s = document.createElement('script'); s.src = url; s.onload = res; s.onerror = rej; document.head.appendChild(s); }); }
+    // loadScript is defined later near render helpers (deduplicated)
 
         // Example: register some placeholder plugins (could be remote URLs)
         registerPlugin('translator', { name: 'Translator', description: 'Terjemahkan teks antar bahasa', url: '' });
@@ -1293,7 +1699,8 @@
             }
             
             dom.userInput.value = ''; state.uploadedImage = null; dom.imagePreviewContainer.innerHTML = ''; autoResizeTextarea();
-            const loadingBubble = addMessage('model', [{ text: `<div class="typing-indicator"><span>.</span><span>.</span><span>.</span></div>` }]);
+            const loadingBubble = addMessage('model', [{ text: `<div class="typing-indicator"><span></span><span></span><span></span></div>` }]);
+            loadingBubble.classList.add('message-thinking');
             const markdownContainer = loadingBubble.querySelector('.markdown-content');
 
             try {
@@ -1306,22 +1713,71 @@
                 if (!response.ok) throw new Error(`API Error: ${response.status}. ${await response.text()}`);
 
                 const reader = response.body.getReader(); const decoder = new TextDecoder();
-                let accumulatedResponse = ""; let firstChunk = true;
+                let accumulatedResponse = ""; let firstChunk = true; let buffer = '';
+                // inactivity timer to finalize partial streams
+                let inactivityTimer = null;
+                const resetInactivity = () => { if (inactivityTimer) clearTimeout(inactivityTimer); inactivityTimer = setTimeout(() => { /* finalize if no new data */ }, 900); };
+
+                // stream-stall detection: show a small hint if no data for STALL_MS
+                const STALL_MS = 4000; let stallTimer = null;
+                function resetStallTimer(){ if (stallTimer) clearTimeout(stallTimer); stallTimer = setTimeout(() => {
+                    try {
+                        if (loadingBubble && !loadingBubble.querySelector('.stream-stall')) {
+                            const hint = document.createElement('div'); hint.className = 'stream-stall text-sm text-yellow-300 mt-2';
+                            hint.innerHTML = `Terhenti — <button class="regenerate-btn inline px-2 py-1 ml-2 rounded bg-yellow-500 text-black">Regenerate</button>`;
+                            loadingBubble.appendChild(hint);
+                        }
+                    } catch(e){ /* ignore */ }
+                }, STALL_MS); }
+
+                // start stall timer
+                resetStallTimer();
+
                 while (true) {
                     const { value, done } = await reader.read();
                     if (done) break;
+                    resetInactivity();
                     if (firstChunk) { markdownContainer.innerHTML = ''; firstChunk = false; }
-                    const lines = decoder.decode(value, {stream: true}).split('\n');
-                    for (const line of lines) {
-                        if (line.startsWith('data: ')) {
-                            try { accumulatedResponse += JSON.parse(line.substring(6)).candidates?.[0]?.content?.parts?.[0]?.text || ''; } catch (e) { /* Abaikan */ }
+                    const chunk = decoder.decode(value, {stream: true});
+                    buffer += chunk;
+                    // split into lines, but keep partial last line in buffer
+                    const rawLines = buffer.split('\n');
+                    buffer = rawLines.pop();
+                    for (const line of rawLines) {
+                        const trimmed = line.trim();
+                        if (!trimmed) continue;
+                        const payload = trimmed.startsWith('data: ') ? trimmed.substring(6) : trimmed;
+                        try {
+                            const parsed = JSON.parse(payload);
+                            const text = parsed?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+                            if (text) accumulatedResponse += text;
+                        } catch (e) {
+                            // not JSON? append raw text heuristically
+                            try { accumulatedResponse += payload.replace(/^\s*\[|\]\s*$/g,''); } catch(e){}
                         }
                     }
+                    // data arrived: reset stall hint if present and restart timer
+                    try { const s = loadingBubble && loadingBubble.querySelector('.stream-stall'); if (s) s.remove(); } catch(e){}
+                    resetStallTimer();
                     markdownContainer.innerHTML = marked.parse(accumulatedResponse + '<span class="streaming-cursor"></span>');
                     scrollToBottom();
                 }
+                // finalize
                 markdownContainer.innerHTML = marked.parse(accumulatedResponse);
+                if (stallTimer) { clearTimeout(stallTimer); stallTimer = null; }
+                // rudimentary truncated-response heuristic: if very short or does not end with typical punctuation
+                const lastChar = accumulatedResponse.trim().slice(-1) || '';
+                const truncated = (accumulatedResponse.trim().length < 40) || !['.','!','?', '\n'].includes(lastChar);
+                if (truncated) {
+                    const hint = document.createElement('div');
+                    hint.className = 'mt-2 text-xs text-yellow-300';
+                    hint.innerHTML = `Respons tampak belum lengkap. <button class="regenerate-btn inline px-2 py-1 ml-2 rounded bg-yellow-500 text-black">Regenerate</button>`;
+                    markdownContainer.appendChild(hint);
+                }
                 currentConv.history.push({ role: 'model', parts: [{ text: accumulatedResponse }] });
+                // swap animation state
+                loadingBubble.classList.remove('message-thinking');
+                loadingBubble.classList.add('message-appear');
                 postProcessMessage(loadingBubble);
                 saveAllData();
 
@@ -1335,6 +1791,8 @@
                     errorMessage = `**Terjadi Kesalahan:**\n\`\`\`\n${error.message}\n\`\`\`\n`; console.error("API Error:", error);
                 }
                 markdownContainer.innerHTML = marked.parse(errorMessage);
+                loadingBubble.classList.remove('message-thinking');
+                loadingBubble.classList.add('message-appear');
             } finally {
                 state.isGenerating = false; updateUIForGeneration(false);
             }
@@ -1528,27 +1986,83 @@
         }
         function autoResizeTextarea() { const ta = dom.userInput; ta.style.height = 'auto'; ta.style.height = `${Math.min(ta.scrollHeight, 200)}px`; }
         function scrollToBottom(instant = false) { dom.chatContainer.scrollTo({ top: dom.chatContainer.scrollHeight, behavior: instant ? 'instant' : 'smooth' }); }
-    function openSidebar() { dom.sidebar.classList.remove('-translate-x-full'); dom.sidebarOverlay.classList.remove('hidden'); try { document.documentElement.classList.add('sidebar-open'); } catch(e){} }
-    function closeSidebar() { dom.sidebar.classList.add('-translate-x-full'); dom.sidebarOverlay.classList.add('hidden'); try { document.documentElement.classList.remove('sidebar-open'); } catch(e){} }
+    function openSidebar() {
+        dom.sidebar.classList.remove('-translate-x-full');
+        dom.sidebarOverlay.classList.remove('hidden');
+        try { dom.sidebarOverlay.style.pointerEvents = 'auto'; dom.sidebarOverlay.style.opacity = '0.6'; } catch(e){}
+        try { document.documentElement.classList.add('sidebar-open'); } catch(e){}
+        try { if (dom.sidebarToggle) dom.sidebarToggle.setAttribute('aria-expanded','true'); dom.sidebar.focus(); } catch(e){}
+    }
+    function closeSidebar() {
+        dom.sidebar.classList.add('-translate-x-full');
+        dom.sidebarOverlay.classList.add('hidden');
+        try { dom.sidebarOverlay.style.pointerEvents = 'none'; dom.sidebarOverlay.style.opacity = '0'; } catch(e){}
+        try { document.documentElement.classList.remove('sidebar-open'); } catch(e){}
+        try { if (dom.sidebarToggle) dom.sidebarToggle.setAttribute('aria-expanded','false'); dom.sidebarToggle.focus(); } catch(e){}
+    }
 
-        function highlightCodeInElement(el) { el.querySelectorAll('pre code:not(.language-mermaid)').forEach(hljs.highlightElement); }
-        
-        function renderMathInElement(el) {
-            // FIXED: Explicitly call the KaTeX library function from the window object
-            if (window.renderMathInElement) {
-                window.renderMathInElement(el, {
-                    delimiters: [
-                        {left: '$$', right: '$$', display: true},
-                        {left: '$', right: '$', display: false},
-                        {left: '\\(', right: '\\)', display: false},
-                        {left: '\\[', right: '\\]', display: true}
-                    ],
-                    throwOnError: false
-                });
+    // Toggle sidebar (open if closed, close if open) — bound to hamburger button
+    function toggleSidebar() {
+        try {
+            if (!dom.sidebar) return;
+            if (dom.sidebar.classList.contains('-translate-x-full')) openSidebar(); else closeSidebar();
+        } catch(e) { console.warn('toggleSidebar failed', e); }
+    }
+
+    // Ensure initial translate state for mobile devices
+    try { if (window.innerWidth <= 640) { dom.sidebar.classList.add('-translate-x-full'); } } catch(e){}
+
+        // Lazy-load helper
+        function loadScript(src){ return new Promise((resolve, reject) => { const s = document.createElement('script'); s.src = src; s.async = true; s.onload = () => resolve(); s.onerror = () => reject(new Error('Failed to load ' + src)); document.head.appendChild(s); }); }
+        function loadCss(href){ return new Promise((resolve, reject) => { const l = document.createElement('link'); l.rel = 'stylesheet'; l.href = href; l.onload = () => resolve(); l.onerror = () => reject(new Error('Failed to load ' + href)); document.head.appendChild(l); }); }
+
+        async function highlightCodeInElement(el) {
+            const blocks = el.querySelectorAll('pre code:not(.language-mermaid)');
+            if (!blocks.length) return;
+            if (typeof hljs === 'undefined') {
+                try { await loadScript('https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js'); } catch(e){ console.warn('Failed to load highlight.js', e); }
+            }
+            try { blocks.forEach(b => { try { hljs.highlightElement(b); } catch(e){} }); } catch(e){}
+        }
+
+        async function renderMathInElement(el) {
+            // load KaTeX auto-render if needed
+            if (typeof window.renderMathInElement === 'undefined') {
+                try {
+                    await loadScript('https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js');
+                } catch(e){ console.warn('Failed to load KaTeX auto-render', e); }
+            }
+            if (typeof window.renderMathInElement === 'function') {
+                try {
+                    window.renderMathInElement(el, {
+                        delimiters: [
+                            {left: '$$', right: '$$', display: true},
+                            {left: '$', right: '$', display: false},
+                            {left: '\\(', right: '\\)', display: false},
+                            {left: '\\[', right: '\\]', display: true}
+                        ],
+                        throwOnError: false
+                    });
+                } catch(e){ console.warn('KaTeX render failed', e); }
             }
         }
 
-        async function renderMermaidDiagrams(el) { const mermaidElements = el.querySelectorAll('pre code.language-mermaid'); for (const codeElement of mermaidElements) { const pre = codeElement.parentElement; const container = document.createElement('div'); container.className = 'mermaid my-4 p-4 flex justify-center items-center bg-white dark:bg-gray-800 rounded-lg'; container.textContent = codeElement.textContent; pre.replaceWith(container); try { await mermaid.run({ nodes: [container] }); } catch(e) { container.innerHTML = `<p class="text-red-400">Error rendering diagram: ${e.message}</p>`; } } }
+        async function renderMermaidDiagrams(el) {
+            const mermaidElements = el.querySelectorAll('pre code.language-mermaid');
+            if (!mermaidElements.length) return;
+            if (typeof mermaid === 'undefined') {
+                try { await loadScript('https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js'); } catch(e){ console.warn('Failed to load mermaid', e); }
+            }
+            for (const codeElement of mermaidElements) {
+                const pre = codeElement.parentElement;
+                const container = document.createElement('div');
+                container.className = 'mermaid my-4 p-4 flex justify-center items-center bg-white dark:bg-gray-800 rounded-lg';
+                container.textContent = codeElement.textContent;
+                pre.replaceWith(container);
+                try { if (mermaid && mermaid.run) await mermaid.run({ nodes: [container] }); }
+                catch(e) { container.innerHTML = `<p class="text-red-400">Error rendering diagram: ${e.message}</p>`; }
+            }
+        }
         
         function addCopyToCodeBlocks(bubble) {
             const codeBlocks = bubble.querySelectorAll('pre');
@@ -1588,25 +2102,33 @@
         // --- EVENT LISTENERS ---
 
         function setupEventListeners() {
-            dom.newChatBtn.addEventListener('click', createNewConversation);
-            dom.sendButton.addEventListener('click', sendMessageToAI);
-            dom.userInput.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessageToAI(); } });
-            dom.userInput.addEventListener('input', autoResizeTextarea);
+            if (dom.newChatBtn) dom.newChatBtn.addEventListener('click', createNewConversation);
+            if (dom.sendButton) dom.sendButton.addEventListener('click', sendMessageToAI);
+            if (dom.userInput) {
+                dom.userInput.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessageToAI(); } });
+                dom.userInput.addEventListener('input', autoResizeTextarea);
+            }
+            // On mobile, when input is focused, ensure chat scrolls so input and recent messages are visible
+            if (dom.userInput) dom.userInput.addEventListener('focus', () => {
+                setTimeout(() => { try { if (dom.chatContainer) dom.chatContainer.scrollTop = dom.chatContainer.scrollHeight; } catch(e){} }, 300);
+            });
             // autosave draft (debounced)
-            const saveDraftDebounced = debounce(() => { if (state.activeConversationId) saveDraft(state.activeConversationId, dom.userInput.value); }, 700);
-            dom.userInput.addEventListener('input', saveDraftDebounced);
+            const saveDraftDebounced = debounce(() => { if (state.activeConversationId && dom.userInput) saveDraft(state.activeConversationId, dom.userInput.value); }, 700);
+            if (dom.userInput) dom.userInput.addEventListener('input', saveDraftDebounced);
             // keyboard shortcuts
             document.addEventListener('keydown', (e) => {
                 if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); dom.searchInput?.focus(); }
                 if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); sendMessageToAI(); }
                 if (e.key === 'Escape') { hideModal(); }
             });
-            dom.sidebarToggle.addEventListener('click', openSidebar);
-            dom.sidebarClose.addEventListener('click', closeSidebar);
-            dom.sidebarOverlay.addEventListener('click', closeSidebar);
+            if (dom.sidebarToggle) dom.sidebarToggle.addEventListener('click', toggleSidebar);
+            if (dom.sidebarClose) dom.sidebarClose.addEventListener('click', closeSidebar);
+            if (dom.sidebarOverlay) dom.sidebarOverlay.addEventListener('click', closeSidebar);
+            // Reset layout control (helpful when mobile layout gets stuck)
+            const resetBtn = document.getElementById('reset-layout-btn'); if (resetBtn) resetBtn.addEventListener('click', restoreDefaultLayout);
             // ...existing code...
-            dom.fullscreenBtn.addEventListener('click', toggleFullscreen);
-            dom.apiKeyButton.addEventListener('click', showApiKeyModal);
+            if (dom.fullscreenBtn) dom.fullscreenBtn.addEventListener('click', toggleFullscreen);
+            if (dom.apiKeyButton) dom.apiKeyButton.addEventListener('click', showApiKeyModal);
             if (dom.settingsButton) dom.settingsButton.addEventListener('click', showSettingsModal); else console.warn('settingsButton not found');
             // Sidebar delegated handler: use a single listener on the sidebar to ensure clicks
             // work even when inner SVGs/icons or dynamic elements intercept the event.
@@ -1630,37 +2152,39 @@
                         // leave other buttons to their direct listeners (if present)
                         default: break;
                     }
+                    // close sidebar automatically on small screens after action
+                    try { if (window.innerWidth < 768) closeSidebar(); } catch(e){}
                 });
             } else {
                 console.warn('Sidebar element not found for delegated tool handling');
             }
 
             // memory toggle
-            document.getElementById('memory-toggle-input')?.addEventListener('change', (e) => { memory.enabled = e.target.checked; saveMemory(); renderMemorySummary(); showToast(memory.enabled ? 'Memori AI diaktifkan' : 'Memori AI dinonaktifkan'); });
+            const memToggle = document.getElementById('memory-toggle-input'); if (memToggle) memToggle.addEventListener('change', (e) => { memory.enabled = e.target.checked; saveMemory(); renderMemorySummary(); showToast(memory.enabled ? 'Memori AI diaktifkan' : 'Memori AI dinonaktifkan'); });
             // load memory on setup
             loadMemory();
-            dom.themeToggle.addEventListener('click', () => {
+            if (dom.themeToggle) dom.themeToggle.addEventListener('click', () => {
                 const themes = ['dark','light','sunset'];
                 const idx = themes.indexOf(state.currentTheme);
                 state.currentTheme = themes[(idx + 1) % themes.length];
                 localStorage.setItem('chimera_theme', state.currentTheme);
                 updateThemeUI();
             });
-            dom.stopGenerationBtn.addEventListener('click', () => { if (state.abortController) state.abortController.abort(); });
+            if (dom.stopGenerationBtn) dom.stopGenerationBtn.addEventListener('click', () => { if (state.abortController) state.abortController.abort(); });
 
             // multi-select toggle
-            dom.multiSelectToggle?.addEventListener('click', () => {
+            if (dom.multiSelectToggle) dom.multiSelectToggle.addEventListener('click', () => {
                 state.multiSelectActive = !state.multiSelectActive;
                 state.selectedConversations = {};
                 dom.bulkActionBar.classList.toggle('hidden', !state.multiSelectActive);
                 loadConversations();
             });
 
-            dom.bulkCancelBtn?.addEventListener('click', () => {
+            if (dom.bulkCancelBtn) dom.bulkCancelBtn.addEventListener('click', () => {
                 state.multiSelectActive = false; state.selectedConversations = {}; dom.bulkActionBar.classList.add('hidden'); loadConversations();
             });
 
-            dom.bulkDeleteBtn?.addEventListener('click', () => {
+            if (dom.bulkDeleteBtn) dom.bulkDeleteBtn.addEventListener('click', () => {
                 const ids = Object.keys(state.selectedConversations).filter(id=> state.selectedConversations[id]);
                 if (!ids.length) return showToast('Pilih percakapan terlebih dahulu', 'warning');
                 showCustomConfirm('Hapus percakapan terpilih?', `Hapus ${ids.length} percakapan?`, () => {
@@ -1669,14 +2193,14 @@
                 });
             });
 
-            dom.bulkExportBtn?.addEventListener('click', () => {
+            if (dom.bulkExportBtn) dom.bulkExportBtn.addEventListener('click', () => {
                 const ids = Object.keys(state.selectedConversations).filter(id=> state.selectedConversations[id]);
                 if (!ids.length) return showToast('Pilih percakapan terlebih dahulu', 'warning');
                 ids.forEach(id => { const conv = state.conversations[id]; const blob = new Blob([JSON.stringify(conv, null, 2)], {type: 'application/json'}); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = `${conv.title || id}.json`; a.click(); URL.revokeObjectURL(url); });
                 showToast('Ekspor selesai');
             });
 
-            dom.bulkPinBtn?.addEventListener('click', () => {
+            if (dom.bulkPinBtn) dom.bulkPinBtn.addEventListener('click', () => {
                 const ids = Object.keys(state.selectedConversations).filter(id=> state.selectedConversations[id]);
                 if (!ids.length) return showToast('Pilih percakapan terlebih dahulu', 'warning');
                 ids.forEach(id => { const c = state.conversations[id]; if (c) c.pinned = !c.pinned; });
@@ -1684,14 +2208,14 @@
             });
 
             // delegated checkbox changes
-            dom.conversationHistory.addEventListener('change', (e) => {
+            if (dom.conversationHistory) dom.conversationHistory.addEventListener('change', (e) => {
                 const cb = e.target.closest('.conv-select-checkbox');
                 if (!cb) return;
                 const id = cb.dataset.id;
                 state.selectedConversations[id] = cb.checked;
             });
             
-            dom.imageUploadInput.addEventListener('change', async (e) => {
+            if (dom.imageUploadInput) dom.imageUploadInput.addEventListener('change', async (e) => {
                 const file = e.target.files[0];
                 if (file) {
                     state.uploadedImage = await fileToBase64(file);
@@ -1707,7 +2231,7 @@
                 }
             });
 
-            if (state.recognition) {
+            if (state.recognition && dom.micBtn) {
                 dom.micBtn.addEventListener('click', () => { dom.micBtn.classList.add('mic-listening'); state.recognition.start(); });
                 state.recognition.onresult = (event) => { const transcript = event.results[0][0].transcript; dom.userInput.value = transcript; autoResizeTextarea(); };
                 state.recognition.onerror = (event) => { showToast(`Error pengenalan suara: ${event.error}`, 'error'); };
@@ -1729,11 +2253,11 @@
 
                 // delegated fallback for new tools (in case direct binding failed)
                 const dr = e.target.closest('#deep-research-btn');
-                if (dr) { console.log('Delegated click: deep-research-btn'); try { unblockOverlaysFullScreen(); } catch(e){} openDeepResearch(); }
+                if (dr) { try { unblockOverlaysFullScreen(); } catch(e){} openDeepResearch(); }
                 const lrn = e.target.closest('#learning-btn');
-                if (lrn) { console.log('Delegated click: learning-btn'); try { unblockOverlaysFullScreen(); } catch(e){} openLearning(); }
+                if (lrn) { try { unblockOverlaysFullScreen(); } catch(e){} openLearning(); }
                 const cnv = e.target.closest('#canva-btn');
-                if (cnv) { console.log('Delegated click: canva-btn'); try { unblockOverlaysFullScreen(); } catch(e){} openCanvaEditor(); }
+                if (cnv) { try { unblockOverlaysFullScreen(); } catch(e){} openCanvaEditor(); }
                 
                 if (e.target.id === 'save-api-key-button') {
                     (async () => {
@@ -1843,6 +2367,24 @@
                 const ttsBtn = e.target.closest('.tts-btn');
                 if (ttsBtn) { const text = ttsBtn.closest('.group').querySelector('.markdown-content').innerText; playTextToSpeech(text, ttsBtn); }
 
+                const regenBtn = e.target.closest('.regenerate-btn');
+                if (regenBtn) {
+                    // find last user message in active conversation
+                    const conv = state.conversations[state.activeConversationId];
+                    if (!conv || !conv.history) return showToast('Tidak ada percakapan aktif', 'error');
+                    // search backwards for last user role
+                    for (let i = conv.history.length -1; i >=0; i--) {
+                        if (conv.history[i].role === 'user') {
+                            const text = (conv.history[i].parts||[]).map(p=>p.text||'').join('\n');
+                            if (text) {
+                                dom.userInput.value = text; autoResizeTextarea(); sendMessageToAI();
+                                showToast('Regenerating respons untuk pesan terakhir...','warning');
+                            }
+                            break;
+                        }
+                    }
+                }
+
                 const editBtn = e.target.closest('.edit-message-btn');
                 if (editBtn) {
                     const idx = Number(editBtn.dataset.index);
@@ -1925,9 +2467,11 @@
                     const modalVisible = !dom.modalBackdrop.classList.contains('opacity-0');
                     if (!modalVisible) {
                         dom.sidebarOverlay.classList.add('hidden');
+                        // only set pointer-events none on backdrop when no modal present
                         dom.modalBackdrop.classList.add('pointer-events-none');
                     } else {
                         dom.modalBackdrop.classList.remove('pointer-events-none');
+                        try { dom.modalBackdrop.style.pointerEvents = 'auto'; } catch(e){}
                     }
                 } catch(e) { /* ignore */ }
                 // aggressive disable of large blocking elements when entering fullscreen
@@ -1965,9 +2509,12 @@
                                 dom.sidebarOverlay.style.pointerEvents = 'none';
                             }
                             if (dom.modalBackdrop) {
-                                dom.modalBackdrop.classList.add('opacity-0');
-                                dom.modalBackdrop.classList.add('pointer-events-none');
-                                dom.modalBackdrop.style.pointerEvents = 'none';
+                                // only hide backdrop if no modal is currently open
+                                if (!dom.modalBackdrop.dataset.modalOpen) {
+                                    dom.modalBackdrop.classList.add('opacity-0');
+                                    dom.modalBackdrop.classList.add('pointer-events-none');
+                                    dom.modalBackdrop.style.pointerEvents = 'none';
+                                }
                             }
                         } catch(e) { console.warn('unblock overlays failed', e); }
                     }
@@ -1995,7 +2542,7 @@
                                     el.style.display = 'none';
                                     el.style.pointerEvents = 'none';
                                     el.style.visibility = 'hidden';
-                                    console.log('aggressive disabled overlay', el);
+                                    // aggressive disabled overlay (hidden in fullscreen)
                                 }
                             }
                         } catch(e) { console.warn('aggressiveDisable error', e); }
@@ -2029,6 +2576,121 @@
                         showToast('Inspector klik aktif: klik elemen untuk melihat info (ESC untuk tutup)', 'success');
                     }
 
+            // -----------------------------------------------------------------
+            // Accessibility: sr-only helper and aria-live region for screen readers
+            // -----------------------------------------------------------------
+            (function addA11yHelpers(){
+                try {
+                    const style = document.createElement('style');
+                    style.id = 'sr-only-style';
+                    style.textContent = `.sr-only{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}.aria-live-region{position:fixed;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden}`;
+                    document.head.appendChild(style);
+                    const live = document.createElement('div');
+                    live.className = 'aria-live-region';
+                    live.setAttribute('aria-live','polite');
+                    live.setAttribute('id','aria-live');
+                    live.setAttribute('aria-atomic','true');
+                    document.body.appendChild(live);
+                } catch(e){ console.warn('a11y helper init failed', e); }
+            })();
+
+            // -----------------------------------------------------------------
+            // Smoke-check & lucide icons refresh (runs once on DOMContentLoaded)
+            // -----------------------------------------------------------------
+            document.addEventListener('DOMContentLoaded', () => {
+                try {
+                    const requiredIds = ['chat-container','user-input','send-button','mic-btn','image-upload-input','toast-container'];
+                    const missing = requiredIds.filter(id => !document.getElementById(id));
+                    if (missing.length) {
+                        console.warn('Smoke-check: missing required DOM ids:', missing);
+                        showToast('Beberapa elemen UI mungkin hilang: ' + missing.join(', '), 'warning');
+                    } else {
+                        console.log('Smoke-check: all required UI ids present.');
+                        showToast('UI smoke-check OK', 'success');
+                    }
+
+                    // Re-init lucide icons if loaded (robust call)
+                    try {
+                        if (window.lucide && typeof window.lucide.replace === 'function') {
+                            window.lucide.replace();
+                            console.log('lucide icons re-initialized via replace().');
+                        } else if (window.lucide && typeof window.lucide.createIcons === 'function') {
+                            window.lucide.createIcons();
+                            console.log('lucide.createIcons() called.');
+                        }
+                    } catch(e){ console.warn('lucide reinit failed', e); }
+
+                    // Ensure critical control icons have inline SVG fallbacks for reliability
+                    try {
+                        const svgs = {
+                            send: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M22 2L11 13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M22 2L15 22L11 13L2 9L22 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+                            mic: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="9" y="2" width="6" height="11" rx="3" stroke="currentColor" stroke-width="2"/><path d="M5 10v2a7 7 0 0 0 14 0v-2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 19v3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+                            paperclip: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M21.44 11.05l-8.49 8.49a5 5 0 0 1-7.07-7.07L12 6.88a3.5 3.5 0 0 1 4.95 4.95L10.5 18.28a2 2 0 1 1-2.83-2.83L15 8.22" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+                        };
+                        function ensureInlineIcon(el, key){ if(!el) return; if (el.querySelector && el.querySelector('svg')) return; const container = document.createElement('span'); container.innerHTML = svgs[key] || ''; el.prepend(container.firstChild); }
+                        ensureInlineIcon(document.querySelector('#send-button'), 'send');
+                        ensureInlineIcon(document.querySelector('#mic-btn'), 'mic');
+                        ensureInlineIcon(document.querySelector('label[for="image-upload-input"]'), 'paperclip');
+                    } catch(e){ console.warn('inline SVG fallback failed', e); }
+
+                    // simple console-level smoke check for errors during init
+                    setTimeout(() => {
+                        if (window.__recentConsoleErrors && window.__recentConsoleErrors.length) {
+                            console.warn('Detected recent console errors during init', window.__recentConsoleErrors.slice(-10));
+                            showToast('Terjadi beberapa error JavaScript (lihat console)', 'error');
+                        }
+                    }, 800);
+                } catch(e) { console.error('Smoke-check failed', e); }
+            });
+
+            // capture console.error for short window for smoke diagnostics
+            (function captureConsoleErrors(){
+                try {
+                    window.__recentConsoleErrors = window.__recentConsoleErrors || [];
+                    const origErr = console.error.bind(console);
+                    console.error = function(){ window.__recentConsoleErrors.push({args: Array.from(arguments), ts: Date.now()}); origErr.apply(null, arguments); };
+                } catch(e) { /* ignore */ }
+            })();
+
+            // -----------------------------------------------------------------
+            // Reduced motion: respect user preference and tone-down animations
+            // -----------------------------------------------------------------
+            (function applyReducedMotion(){
+                try {
+                    const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
+                    function setReduced(reduced){
+                        if (reduced) document.documentElement.classList.add('reduced-motion');
+                        else document.documentElement.classList.remove('reduced-motion');
+                    }
+                    setReduced(mq.matches);
+                    if (mq.addEventListener) mq.addEventListener('change', e => setReduced(e.matches));
+                    else if (mq.addListener) mq.addListener(e => setReduced(e.matches));
+                    // add CSS rule to reduce animation durations when class is present
+                    const rmStyle = document.createElement('style');
+                    rmStyle.id = 'reduced-motion-style';
+                    rmStyle.textContent = `.reduced-motion * { animation-duration: 150ms !important; transition-duration: 120ms !important; }
+                        .reduced-motion .message-appear { animation-duration: 100ms !important; }
+                        .reduced-motion .typing-indicator { display:none !important; }`;
+                    document.head.appendChild(rmStyle);
+                } catch(e) { /* ignore */ }
+            })();
+
+            // Haptic / press feedback helper
+            (function addHaptics(){
+                try {
+                    function vibrateIfSupported(ms){ if ('vibrate' in navigator) { try { navigator.vibrate(ms); } catch(e){} } }
+                    document.addEventListener('pointerdown', (e) => {
+                        const btn = e.target.closest('button, .btn, #send-button, #mic-btn');
+                        if (!btn) return;
+                        btn.classList.add('touch-press');
+                        vibrateIfSupported(10);
+                    }, {passive:true});
+                    document.addEventListener('pointerup', (e) => {
+                        const btn = e.target.closest('button, .btn, #send-button, #mic-btn');
+                        if (btn) btn.classList.remove('touch-press');
+                    });
+                } catch(e) { console.warn('haptics helper init failed', e); }
+            })();
                     function clickInspectorHandler(e) {
                         e.stopPropagation(); e.preventDefault();
                         const el = e.target;
